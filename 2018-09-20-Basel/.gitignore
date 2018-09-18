@@ -1,0 +1,6 @@
+*.html
+*.rda
+*.Rproj
+libs
+[1-9]*_files
+.RProj.user/

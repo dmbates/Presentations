@@ -1,0 +1,924 @@
+---
+title: "Mixed-effects models with R"
+subtitle: "Part 1: Simple scalar random effects"
+author: "Douglas Bates"
+date: "2018/09/20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: left, top
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+options(width=69,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+library(lattice)
+library(lme4)
+lattice.options(default.theme = function() standard.theme())
+if (file.exists("classroom.rda")) {
+    load("classroom.rda")
+} else {
+    classroom <- within(read.csv("http://www-personal.umich.edu/~bwest/classroom.csv"),
+                    {
+                        classid <- factor(classid)
+                        schoolid <- factor(schoolid)
+                        sex <- factor(sex, labels = c("M","F"))
+                        minority <- factor(minority, labels = c("N", "Y"))
+                    })
+    save(classroom, file="classroom.rda")
+}
+library(knitr)
+opts_chunk$set(prompt=TRUE,comment=NA,fig.height=5.4,fig.align='center')
+```
+
+# R packages and data in packages
+
+- Packages incorporate functions, data and documentation.
+
+- You can produce packages for private or in-house use or you can contribute your package to the Comprehensive R Archive Network, [`CRAN`](http://cran.R-project.org)
+
+- We will be using the `lme4` package from CRAN. Install it from the `Packages` menu item or with
+```{r install, eval=FALSE}
+install.packages("lme4")
+```
+
+- You only need to install a package once.  If a new version becomes available you can update (see the menu item).
+
+- To use a package in an R session you attach it using
+```{r require}
+require(lme4)
+```
+or
+```{r library}
+library(lme4)
+```
+
+---
+class: left, top
+
+# Accessing documentation
+
+- To be added to CRAN, a package must pass a series of quality control checks.  In particular, all functions and data sets must be documented.  Examples and tests can also be included.
+
+- The `data` function provides names and brief descriptions of the data sets in a package.
+
+```
+> data(package = "lme4")
+
+Data sets in package ‘lme4’:
+
+Arabidopsis                             Arabidopsis clipping/fertilization data
+Dyestuff                                Yield of dyestuff by batch
+Dyestuff2                               Yield of dyestuff by batch
+InstEval                                University Lecture/Instructor Evaluations by Students at ETH
+Pastes                                  Paste strength by batch and cask
+Penicillin                              Variation in penicillin testing
+VerbAgg                                 Verbal Aggression item responses
+cake                                    Breakage Angle of Chocolate Cakes
+cbpp                                    Contagious bovine pleuropneumonia
+grouseticks                             Data on red grouse ticks from Elston et al. 2001
+grouseticks_agg (grouseticks)           Data on red grouse ticks from Elston et al. 2001
+sleepstudy                              Reaction times in a sleep deprivation study
+```
+
+- Use `?` followed by the name of a function or data set to view its documentation.  If the documentation contains an example section, you can execute it with the `example` function.
+
+---
+class: left, top
+
+# Effects - fixed and random
+
+- Mixed-effects models, like many statistical models, describe the relationship between a *response* variable and one or more *covariates* recorded with it.
+
+- The models we will discuss are based on a *linear predictor* expression incorporating *coefficients* that are estimated from the observed data.
+
+- Coefficients associated with the levels of a categorical covariate are sometimes called the *effects* of the levels.
+
+- When the levels of a covariate are fixed and reproducible (e.g. a covariate `sex` that has levels `male` and `female`) we incorporate them as **fixed-effects parameters**.
+
+- When the levels of a covariate correspond to the particular  observational or experimental units in the experiment we incorporate them as **random effects**.
+
+---
+class: left, top
+
+# The Dyestuff data and model
+
+- The `Dyestuff`, `Penicillin` and `Pastes` data  sets all come from the classic book *Statistical Methods in  Research and Production*, edited by O.L. Davies  and first published in 1947.
+
+- The `Dyestuff` data are a balanced one-way classification of the `Yield` of dyestuff from samples produced from six `Batch`es of an intermediate product. See `?Dyestuff`.
+```{r Dyestuffstr}
+str(Dyestuff)
+summary(Dyestuff)
+```
+
+---
+class: left, top
+
+# The effect of the batches
+
+- To emphasize that `Batch` is categorical, we use letters instead of numbers to designate the levels.
+
+- Because there is no inherent ordering of the levels of `Batch`, we will reorder the levels if, say, doing so can make a plot more informative.
+
+- The particular batches observed are just a selection of the possible batches and are entirely used up during the course of the experiment.
+
+- It is not particularly important to estimate and compare yields from these batches.  Instead we wish to estimate the variability in yields due to batch-to-batch variability.
+
+- The `Batch` factor will be used in *random-effects* terms in models that we fit.
+
+---
+class: left, top
+
+# Dyestuff data plot
+
+```{r Dyestuffplot,fig.height=3,dev='svg',echo=FALSE}
+set.seed(1234543)
+print(dotplot(reorder(Batch, Yield) ~ Yield, Dyestuff,
+              ylab = "Batch", jitter.y = TRUE, pch = 21, aspect = 0.27,
+              xlab = "Yield of dyestuff (grams of standard color)",
+              type = c("p", "a")))
+```
+
+- The line joins the mean yields of the six batches, which have been reordered by increasing mean yield.
+
+- The vertical positions are jittered slightly to reduce overplotting.  The lowest yield for batch A was observed on two distinct preparations from that batch.
+
+---
+class: left, top
+
+# A mixed-effects model for the dyestuff yield
+
+```{r fm1}
+fm1 <- lmer(Yield ~ 1 + (1|Batch), Dyestuff)
+summary(fm1)
+```
+
+---
+class: left, top
+
+```{r opts, include=FALSE}
+op <- options(digits=5)
+```
+
+# Extracting information from the fitted model
+
+- Model `fm1` has one fixed-effect parameter, the mean yield, and one random-effects term, generating a simple, scalar random effect for each level of `Batch`.  It is an object of class `"lmerMod"` to which many *extractor* functions can be applied.
+```{r extractors}
+fixef(fm1)
+ranef(fm1, drop=TRUE)
+fitted(fm1)
+```
+
+```{r unopt, include=FALSE}
+options(op)
+```
+
+---
+class: left, top
+
+# Definition of mixed-effects models
+
+
+- Models with random effects are often written like
+
+$$y_{ij}=\mu+b_i+\epsilon_{ij},\;b_i\sim\mathcal{N}(0,\sigma_b^2),\epsilon_{ij}\sim\mathcal{N}(0,\sigma^2),i=1,\dots,I,j=1,\dots,J_i$$
+
+- This scalar notation quickly becomes unwieldy, degenerating into *"subscript fests"*. We will use a vector/matrix notation.
+
+- A mixed-effects model incorporates two vector-valued random variables: the response vector, $\mathcal{Y}$, and the random effects vector, $\mathcal{B}$. We observe the value, $\mathbf y$, of $\mathcal{Y}$.  We do not observe the value of $\mathcal{B}$.
+
+- In the models we will consider, the random effects are modeled as a multivariate Gaussian (or "normal") random variable, $\mathcal{B}\sim\mathcal{N}(\mathbf 0,\mathbf\Sigma(\mathbf\theta))$, where $\mathbf\theta$ is a vector of *variance-component parameters*.
+
+---
+class: left, top
+
+# Linear mixed models
+
+- The conditional distribution, $(\mathcal Y|\mathcal B=\mathbf b)$, depends on $\mathbf b$ only through its mean, $\mathbf\mu_{\mathcal Y|\mathcal B=\mathbf b}$.
+
+- The conditional mean, $\mathbf\mu_{\mathcal Y|\mathcal B=\mathbf b}$, depends on $\mathbf b$ and on the fixed-effects parameter vector, $\mathbf\beta$, through a *linear predictor* expression, $\mathbf Z\mathbf b+\mathbf X\beta$. The *model matrices* $\mathbf Z$ and $\mathbf X$ are determined from the form of the model and the values of the covariates.
+
+- In a *linear mixed model* the conditional distribution is a "spherical" multivariate Gaussian
+$$(\mathcal{Y}|\mathcal{B}=\mathbf b)\sim\mathcal{N}(\mathbf Z\mathbf b+\mathbf X\beta,\sigma^2\mathbf I_n)$$    
+
+- The scalar $\sigma$ is the *common scale parameter*; the dimension of $\mathbf y$ is $n$, $\mathbf b$ is $q$ and $\beta$ is $p$, hence $\mathbf Z$ is $n\times q$ and $\mathbf X$ is $n\times p$.
+
+---
+class: left, top
+
+# Simple, scalar random effects terms
+
+- A term like `(1|Batch)` in an `lmer` formula is called a *simple, scalar random-effects term*.
+
+- The expression on the right of the `"|"` operator (usually just the name of a variable) is evaluated as a factor, called the *grouping factor* for the term.
+
+- Suppose we have $k$ such terms with $n_i,i=1,\dots,k$ levels in the $i$th term's grouping factor. A scalar random-effects term generates one random effect for each level of the grouping factor. If all the random effects terms are scalar terms then $q=\sum_{i=1}^kn_i$.
+
+- The model matrix $\mathbf Z$ is the horizontal concatenation of $k$ matrices.  For a simple, scalar term, the $i$th vertical slice, which has $n_i$ columns, is the indicator columns for the $n_i$ levels of the $i$th grouping factor.
+
+---
+class: left, top
+
+# Conditional means of the random effects
+  
+- Technically we do not provide "estimates" of the random effects because they are not parameters.
+
+- One answer to the question, *"so what are those numbers provided by `ranef` anyway?"* is that they are **BLUP**s (**B**est **L**inear **U**nbiased **P**redictors) of the random effects.  The acronym is attractive but not very informative (what is a "linear unbiased predictor" and in what sense are these the "best"?).  Also, the concept does not generalize.
+
+- A better answer is that those values are the conditional means, $\mu_{\mathcal B|\mathcal Y =\mathbf y}$, evaluated at the estimated parameter values.  Regrettably, we can only evaluate the conditional means for linear mixed models.
+
+- However, these values are also the conditional modes and that concept does generalize to other types of mixed models.
+
+---
+class: left, top
+
+# Caterpillar plot for fm1
+  
+- For linear mixed models the conditional distribution of the random effects, given the data, written $(\mathcal B|\mathcal Y=\mathbf y)$, is again a multivariate Gaussian distribution.
+
+- We can evaluate the means and standard deviations of the individual conditional distributions, $(\mathcal B_j|\mathcal Y=\mathbf y), j = 1,\dots,q$.  We show these in the form of a 95% prediction interval, with the levels of the grouping factor arranged in increasing order of the conditional mean.
+
+- These are sometimes called *"caterpillar plots"*.
+  
+```{r fm1ranef,dev='svg',echo=FALSE,fig.height=2.5,fig.align='center'}    
+print(dotplot(ranef(fm1, condVar = TRUE), strip = FALSE)[[1]])
+``` 
+
+---
+class: left, top
+
+# REML estimates versus ML estimates
+
+- The default parameter estimation criterion for linear mixed models is restricted (or *"residual"*) maximum likelihood (REML).
+
+- Maximum likelihood (ML) estimates (sometimes called *"full maximum likelihood"*) can be requested by specifying `REML = FALSE` in the call to `lmer`.
+
+- Generally REML estimates of variance components are preferred.  ML estimates are known to be biased.  Although REML estimates are not guaranteed to be unbiased, they are usually less biased than ML estimates.
+
+- Roughly, the difference between REML and ML estimates of variance components is comparable to estimating $\sigma^2$ in a fixed-effects regression by $\mathit{SSR}/(n-p)$ versus $\mathit{SSR}/n$, where $\mathit{SSR}$ is the residual sum of squares.
+
+- For a balanced, one-way classification like the `Dyestuff` data, the REML and ML estimates of the fixed-effects are identical.
+
+---
+class: left, top
+
+# Re-fitting the model for ML estimates
+```{r update}
+summary(fm1M <- update(fm1, REML = FALSE))
+```
+
+---
+class: left, top
+
+# Estimates of variance components can be zero
+  
+- We have been careful to state the variance of the random effects is $\ge0$.
+
+- For some data sets the maximum likelihood or REML estimate, $\widehat{\sigma_b^2}$ ends up as exactly zero.  That is, the optimal parameter value is on the boundary of the region of allowable values.
+
+- **This is not a mistake.** It is not an indication that there is no variability between groups.  The underlying variability in the data will always induce variability between groups.  $\sigma_b^2$ is the *excess* variability in groups beyond that induced by $\sigma^2$ in each observation.
+
+- Box and Tiao (1973) provide simulated data with a structure like the `Dyestuff` data illustrating this.
+  
+```{r Dyestuff2}
+str(Dyestuff2)
+```   
+
+---
+class: center, top
+
+# Plot of the Dyestuff2 data
+
+```{r Dyestuff2plot,dev='svg',echo=FALSE,fig.height=3}
+print(dotplot(reorder(Batch, Yield) ~ Yield, Dyestuff2,
+              ylab = "Batch", jitter.y = TRUE, pch = 21, aspect = 0.27,
+              xlab = "Simulated response (dimensionless)",
+              type = c("p", "a")))
+``` 
+
+- For these data the batch-to-batch variability is not large compared to the within-batch variability.
+  
+---
+class: left, top
+
+# Fitting the model to Dyestuff2
+```{r fm1A}
+summary(fm1A <- lmer(Yield ~ 1 + (1|Batch), Dyestuff2, REML=FALSE))
+```
+
+---
+class: left, top
+
+# A trivial mixed-effects model is a fixed-effects model
+  
+- The mixed model `fm1A` with an estimated variance $\widehat{\sigma_b^2}=0$ is equivalent to a model with only fixed-effects terms.
+
+```{r lm1}
+summary(lm1 <- lm(Yield ~ 1, Dyestuff2))
+logLik(lm1)
+``` 
+
+---
+class: left, top
+
+# Recap of the Dyestuff model
+  
+- The model is fit as
+```{r fm1call,echo=FALSE}
+fm1@call
+``` 
+- There is one random-effects term, `(1|Batch)`, in the model formula.  It is a simple, scalar term for the grouping factor  `Batch` with $n_1=6$ levels.  Thus $q=6$.
+
+- The model matrix $\mathbf Z$ is the $30\times 6$ matrix of indicators of the levels of `Batch`.
+
+- The variance-covariance matrix, $\Sigma$, is a nonnegative multiple of the $6\times 6$ identity matrix, $\mathbf I_6$.
+
+- The fixed-effects parameter vector, $\beta$, is of length $p=1$.  All the elements of the $30\times 1$ model matrix $\mathbf X$ are unity.
+  
+
+---
+class: left, top
+
+
+# The Penicillin data
+```{r Penicillinstr}
+str(Penicillin)
+xtabs(~ sample + plate, Penicillin)
+``` 
+
+- These are measurements of the potency (measured by the diameter
+  of a clear area on a Petri dish) of penicillin samples in a
+  balanced, unreplicated two-way crossed classification with the test
+  medium, `plate`.
+
+
+
+---
+class: center, top
+
+
+# Penicillin data plot
+
+```{r PenicillinPlot,dev='svg',echo=FALSE,fig.align='center',fig.height=5.4}
+print(dotplot(reorder(plate, diameter) ~ diameter, Penicillin, groups = sample,
+              ylab = "Plate", xlab = "Diameter of growth inhibition zone (mm)",
+              type = c("p", "a"), auto.key = list(columns = 6, lines = TRUE)))
+``` 
+
+---
+class: left, top
+
+
+# Model with crossed simple random effects for Penicillin
+```{r fm2}
+summary(fm2 <- lmer(diameter ~ 1 + (1|plate) + (1|sample), Penicillin))
+``` 
+
+
+```{r include=FALSE}
+op <- options(digits = 5)
+``` 
+
+---
+class: left, top
+
+
+# Random effects for fm2
+
+- The model for the $n=144$ observations has $p=1$ fixed-effects
+    parameter and $q=30$ random effects from $k=2$ random effects
+    terms in the formula.
+
+```{r ranef2}
+ranef(fm2, drop = TRUE)
+``` 
+
+
+```{r include=FALSE}
+options(op)
+``` 
+
+---
+class: center, top
+
+
+# Prediction intervals for random effects
+```{r fm2ranef,dev='svg',echo=FALSE,fig.align='center',fig.height=5.4}  
+qrr2 <- dotplot(ranef(fm2, condVar = TRUE), strip = FALSE)
+print(qrr2[[1]], pos = c(0,0,1,0.75), more = TRUE)
+print(qrr2[[2]], pos = c(0,0.65,1,1))
+``` 
+
+---
+class: left, top
+
+
+# Models with crossed random effects
+
+- Many people believe that mixed-effects models are equivalent
+    to hierarchical linear models (HLMs) or "multilevel models".
+    This is not true.  The `plate` and `sample` factors in
+    `fm2` are crossed.  They do not represent levels in a hierarchy.
+
+- There is no difficulty in defining and fitting models with
+    crossed random effects (meaning random-effects terms whose
+    grouping factors are crossed).  However, fitting models with
+    crossed random effects can be somewhat slower.
+
+- The crucial calculation in each `lmer` iteration is
+    evaluation of a $q\times q$ sparse, lower triangular, Cholesky
+    factor, $\mathbf L(\theta)$, derived from $\mathbf Z$ and
+    $\Sigma(\theta)$.  Crossing of grouping factors increases
+    the number of nonzeros in $\mathbf L(\theta)$ and causes some
+    "fill-in" of $\mathbf L$ relative to $\mathbf Z^\prime\mathbf Z$.
+
+---
+class: left, top
+
+
+# All HLMs are mixed models but not vice-versa
+
+- Even though Raudenbush and Bryk (2002) do discuss models for
+    crossed factors in their HLM book, such models are not
+    hierarchical.
+
+- Experimental situations with crossed random factors, such as
+    "subject" and "stimulus", are common.  We can, and should, model
+    such data according to its structure.
+
+- In longitudinal studies of subjects in social contexts (e.g.
+    students in classrooms or in schools) we almost always have partial
+    crossing of the subject and the context factors, meaning that, over
+    the course of the study, a particular student may be observed in
+    more than one class but not all students are
+    observed in all classes.  The student and class factors are
+    neither fully crossed nor strictly nested.  
+
+- For longitudinal data, "nested" is only important if it means
+    "nested across time".  "Nested at a particular time" does not
+    count.
+
+- `lme4` handles fully or partially crossed factors gracefully.
+
+
+---
+class: left, top
+
+
+# The Pastes data
+```{r Pastesstr}
+str(Pastes)
+xtabs(~ batch + sample, Pastes, sparse = TRUE)
+``` 
+
+---
+class: left, top
+
+# Structure of the Pastes data
+
+- The `sample` factor is nested within the `batch`
+    factor. Each sample is from one of three casks selected from a
+    particular batch.
+
+- Note that there are 30, not 3, distinct samples.
+
+- We can label the casks as `a', `b' and `c' but then the
+    `cask` factor by itself is meaningless (because cask `a' in
+    batch `A' is unrelated to cask `a'in batches `B', `C', $\dots$).
+    The `cask` factor is only meaningful within a `batch`.
+
+- Only the `batch` and `cask` factors, which are
+    apparently crossed, were present in the original data set.
+    `cask` may be described as being nested within `batch`
+    but that is not reflected in the data.  It is \Emph{implicitly
+      nested}, not explicitly nested.
+
+- You can save yourself a lot of grief by immediately creating
+    the explicitly nested factor.  The recipe is
+
+```{r samplegen,eval=FALSE}
+Pastes <- within(Pastes, sample <- factor(batch:cask))
+```
+
+---
+class: left, top
+
+# Avoid implicitly nested representations
+
+- The `lme4` package allows for very general model
+    specifications.  It does not require that factors associated with
+    random effects be hierarchical or "multilevel" factors in the
+    design.
+
+- The same model specification can be used for data with nested
+    or crossed or partially crossed factors.  Nesting or crossing is
+    determined from the structure of the factors in the data, not the
+    model specification.
+
+- You can avoid confusion about nested and crossed factors by
+    following one simple rule: ensure that different levels of a
+    factor in the experiment correspond to different labels of the
+    factor in the data.
+
+- Samples were drawn from 30, not 3, distinct casks in this
+    experiment.  We should specify models using the `sample`
+    factor with 30 levels, not the `cask` factor with 3 levels.
+
+---
+class: center, top
+
+# Pastes data plot
+
+```{r Pastesplot,dev='svg',echo=FALSE,fig.height=5}
+Pastes <- within(Pastes, bb <- reorder(batch, strength))
+Pastes <- within(Pastes, ss <- reorder(reorder(sample, strength),
+          as.numeric(batch)))
+print(dotplot(ss ~ strength | bb, Pastes,
+              strip = FALSE, strip.left = TRUE, layout = c(1, 10),
+              scales = list(y = list(relation = "free")),
+              ylab = "Sample within batch", type = c("p", "a"),
+              xlab = "Paste strength", jitter.y = TRUE))
+``` 
+
+---
+class: left, top
+
+# A model with nested random effects
+```{r fm3}
+summary(fm3 <- lmer(strength ~ 1 + (1|batch) + (1|sample), Pastes))
+``` 
+
+---
+class: center, top
+
+# Random effects from model fm3
+
+```{r fm3ranef,dev='svg',echo=FALSE,fig.align='center',fig.height=5}  
+qrr3 <- dotplot(ranef(fm3, condVar = TRUE), strip = FALSE)
+print(qrr3[[1]], pos = c(0,0,1,0.75), more = TRUE)
+print(qrr3[[2]], pos = c(0,0.65,1,1))
+``` 
+
+Batch-to-batch variability is low compared to sample-to-sample.
+
+---
+class: left, top
+
+# Eliminate the random-effects term for batch?
+
+- We have seen that there is little batch-to-batch variability
+  beyond that induced by the variability of samples within batches.
+
+- We can fit a reduced model without that term and compare it to
+  the original model.
+
+- Somewhat confusingly, model comparisons from likelihood ratio
+  tests are obtained by calling the `anova` function on the two
+  models.  (Put the simpler model first in the call to `anova`.)
+
+- Sometimes likelihood ratio tests can be evaluated using the REML
+  criterion and sometimes they can't.  Instead of learning the rules
+  of when you can and when you can't, it is easiest always to refit the
+  models with \code{REML = FALSE} before comparing.
+
+---
+class: left, top
+
+# Comparing ML fits of the full and reduced models
+
+```{r fm3LRT}
+fm3M <- update(fm3, REML = FALSE)
+fm4M <- lmer(strength ~ 1 + (1|sample),
+             Pastes, REML = FALSE)
+anova(fm4M, fm3M)
+``` 
+
+---
+class: left, top
+
+# p-values of LR tests on variance components
+
+- The likelihood ratio is a reasonable criterion for comparing
+  these two models.  However, the theory behind using a $\chi^2$
+  distribution with 1 degree of freedom as a reference distribution
+  for this test statistic does not apply in this case.  The null
+  hypothesis is on the boundary of the parameter space.
+
+- Even at the best of times, the p-values for such tests are only
+  approximate because they are based on the asymptotic behavior of the
+  test statistic.  To carry the argument further, all results in
+  statistics are based on models and, as George Box famously said,
+  "All models are wrong; some models are useful."
+
+
+---
+class: left, top
+
+# LR tests on variance components (cont'd)
+
+- In this case the problem with the boundary condition results in
+  a p-value that is larger than it would be if, say, you compared this
+  likelihood ratio to values obtained for data simulated from the null
+  hypothesis model.  We say these results are "conservative".
+
+- As a rule of thumb, the p-value for the $\chi^2$ test on a
+  simple, scalar term is roughly twice as large as it should be.
+
+- In this case, dividing the p-value in half would not affect our
+  conclusion. 
+
+---
+class: left, top
+
+# Updated model, REML estimates
+```{r fm4}
+summary(fm4 <- update(fm4M, REML = TRUE))
+``` 
+
+---
+class: left, top
+
+# Recap of the analysis of the Pastes data
+
+- The data consist of $n=60$ observations on $n_1=30$ samples
+    nested within $n_2=10$ batches.  
+
+- The data are labelled with a `cask` factor with $3$
+    levels but that is an implicitly nested factor.  Create the
+    explicit factor `sample` and ignore `cask` from then
+    on.
+
+- Specification of a model for nested factors is exactly the
+    same as specification of a model with crossed or partially crossed
+    factors --- provided that you avoid using implicitly nested factors.
+
+- In this case the `batch` factor was inert --- it did not
+    "explain" substantial variability in addition to that attributed
+    to the `sample` factor. We therefore prefer the simpler model.
+
+- At the risk of "beating a dead horse", notice that, if we had
+    used the `cask` factor in some way, we would still need to
+    create a factor like `sample` to be able to reduce the
+    model.  The `cask` factor is only meaningful within `batch`.
+
+---
+class: left, top
+
+# This is all very nice, but $\dots$
+
+- These methods are interesting but the results are not really
+    new. Similar results are quoted in *Statistical Methods in
+      Research and Production*, which is a very old book.
+
+- The approach described in that book is actually quite
+    sophisticated, especially when you consider that the methods
+    described there, based on observed and expected mean squares, are
+    for hand calculation --- in pre-calculator days!
+
+- Why go to all the trouble of working with sparse matrices and
+    all that if you could get the same results with paper and pencil?
+    The one-word answer is *balance*. 
+
+- Those methods depend on the data being balanced. The design
+    must be completely balanced and the resulting data must also be
+    completely balanced.
+
+- Balance is fragile.  Even if the design is balanced, a single
+    missing or questionable observation destroys the balance.
+    Observational studies (as opposed to, say, laboratory experiments)
+    cannot be expected to yield balanced data sets.
+
+- Also, the models involve only simple, scalar random effects
+    and do not incorporate covariates.
+
+---
+class: left, top
+
+# Structure of the classroom data
+
+- The `classroom` data are a cross-section of students
+    within classes within schools.  The `mathgain` variable is
+    the difference in mathematics achievement scores in grade 1 and
+    kindergarten.
+
+- These data are quite unbalanced.  The distribution of the
+    number of students observed per classroom is
+```{r studentperclass}
+xtabs( ~ xtabs(~ classid, classroom))
+```
+- Similarly, the distribution of the number of classes observed
+  per school is
+
+```{r classperschool}
+table(xtabs(~ schoolid,
+    unique(subset(classroom, select = c(classid, schoolid)))))
+```
+
+---
+class: center, top
+
+
+# Twelve schools, each with 5 classrooms
+```{r Schoolsplot,dev='svg',echo=FALSE,fig.align='center',fig.height=5.4}
+refactor <- function(x) if(is.factor(x)) factor(x) else x
+sch12 <- do.call(data.frame,
+                 lapply(subset(classroom,
+                               schoolid %in% c(12,15, 17, 33,46, 57,
+                                               68, 70, 71, 76, 85, 99)),
+                        refactor))
+sch12 <- within(sch12, ss <- reorder(schoolid, mathgain))
+sch12 <- within(sch12, cc <- reorder(reorder(classid, mathgain),
+          as.numeric(schoolid)))
+print(dotplot(cc ~ mathgain | ss , sch12, 
+              strip = FALSE, strip.left = TRUE, layout = c(1, 12),
+              scales = list(y = list(relation = "free")), pch = 21,
+              ylab = "Class within school", type = c("p", "a"),
+              xlab = "Mathematics gain from kindergarten to grade 1",
+              jitter.y = TRUE))
+``` 
+
+---
+class: left, top
+
+
+# Simple, "unconditional" model for the classroom data
+```{r fm5}
+summary(fm5 <- lmer(mathgain ~ 1 + (1|classid) + (1|schoolid),
+             classroom))
+``` 
+
+---
+class: left, top
+
+# Some comments on the "unconditional" model
+
+- In the multilevel modeling literature a model such as
+    `fm5` that does not incorporate fixed-effects terms for
+    demographic characteristics of the student, class or school, is
+    called an "unconditional" model.
+
+- Notice that the dominant level of variability is the residual
+    variability.  It is unlikely that random effects for both classes
+    and schools are needed when modeling these data.
+
+- We have seen in Exercises 2 that there seem to be trends with
+    respect to the `minority` factor and the `mathkind`
+    score but no overall trends with respect to `sex`.
+
+- A coefficient for a continuous covariate, such as
+    `mathkind`, or for fixed, reproducible levels of a factor
+    like `sex` or `minority` is incorporated in the
+    fixed-effects terms.
+
+---
+class: left, top
+
+# Model-building approach
+
+- Note that these unbalanced data have, for the most part,
+    very few classes per school (sometimes as few as 1) and very few
+    students per class (also sometimes as few as 1).  Under these
+    circumstances, it is optimistic to expect to be able to partition
+    the variability across students, classes and schools.
+
+- We should consider adding fixed-effects terms and perhaps
+    removing one of the random-effects terms.
+
+- We will start by incorporating fixed-effects terms then
+    revisit the need for both random-effects terms.
+
+- We will begin with the fixed-effects terms adopted as a final
+    model in chapter 4 of West, Welch and Galecki (2007).
+
+- For brevity, we only display the output of model fits as this
+    contains enough information to reconstruct the call to `lmer`.
+
+---
+class: left, top
+
+# A model with fixed-effects terms
+```{r fm6,echo=FALSE}
+summary(fm6 <- lmer(mathgain ~ 1 + mathkind + minority + sex + ses + housepov
+                    + (1|classid) + (1|schoolid), classroom), corr = FALSE)
+```   
+
+---
+class: left, top
+
+# Where are the p-values?!!
+
+- The first thing that most users notice is that there are no
+    p-values for the fixed-effects coefficients!  Calculating a p-value
+    for $H_0:\beta_j=0$ versus $H_a:\beta_j\ne0$ is not as
+    straightforward as it may seem.  The ratio called a "t value" in
+    the output does not have a Student's T distribution under the null
+    hypothesis.
+
+- For simple models fit to small, balanced data sets one can
+    calculate a p-value.  Not so for unbalanced data.  When the number
+    of groups and observations are large, approximations don't matter
+    --- you can consider the ratio as having a standard normal
+    distribution.
+
+- The only time that you can calculate an "exact" p-value
+    and the difference between this and the standard normal dist'n is
+    important is for small, balanced data sets, which are
+    exactly the cases that appear in text books.  People get very,
+    very upset if the values calculated by the software don't agree
+    perfectly with the text book answers.
+
+- Here, just say a coefficient is "significant" if $|t|> 2$.
+
+---
+class: left, top
+
+# Removing the insignificant term for sex
+```{r fm7,echo=FALSE}
+summary(fm7 <- lmer(mathgain ~ 1 + mathkind + minority + ses + housepov
+                  + (1|classid) + (1|schoolid), classroom), corr = FALSE)
+```   
+
+---
+class: left, top
+
+# Removing the insignificant term for housepov
+```{r fm8,echo=FALSE}
+summary(fm8 <- lmer(mathgain ~ mathkind + minority + ses
+                  + (1|classid) + (1|schoolid), classroom), corr = FALSE)
+```   
+
+---
+class: center, top
+
+# Prediction intervals on random effects for class
+
+```{r Classpredi,dev='svg',echo=FALSE,fig.align='center',fig.height=5.2}
+print(dotplot(ranef(fm8, condVar="TRUE"), strip = FALSE,
+              scales = list(y = list(draw = FALSE)))$classid)
+```     
+
+---
+class: left, top
+
+# Normal probability plot of random effects for class
+
+With many levels of the grouping factor, use a normal probability plot (`qqmath`) of the prediction intervals for the random effects.
+
+```{r Classpred2,dev='svg',echo=FALSE,fig.align='center',fig.height=5}
+qqmath(ranef(fm8, condVar=TRUE),strip=FALSE)$classid
+```     
+
+---
+class: center, top
+
+# Normal probability plot of random effects for school
+
+```{r Schoolpred,dev='svg',echo=FALSE,fig.align='center',fig.height=5.4}
+print(qqmath(ranef(fm8, condVar=TRUE),strip=FALSE)$schoolid)
+```
+
+---
+class: left, top
+
+# Refit without random effects for class
+```{r fm9,echo=FALSE}
+summary(fm9M <- lmer(mathgain ~ mathkind + minority + ses
+                   + (1|schoolid), classroom, REML = FALSE), corr = FALSE)
+```   
+
+---
+class: left, top
+
+# Check if random effects for class are significant
+
+```{r fm8Manova}
+fm8M <- update(fm8, REML = FALSE)
+anova(fm9M, fm8M)
+```   
+
+- Contrary to what we saw in the plots, the random-effects term
+  for `classid` is significant even in the presence of the
+  `schoolid` term
+
+- Part of the reason for this inconsistency is our incorporating
+  312 random effects at a "cost" of 1 parameter.  In some way we are
+  undercounting the number of degrees of freedom added to the model
+  with this term.
+---
+class: left, top
+
+
+# Recap of simple, scalar random-effects terms
+
+- For `lmer` a simple, scalar random effects term is of the
+    form `(1|F)`.
+
+- The number of random effects generated by the $i$th such
+    term is the number of levels, $n_i$, of `F` (after dropping
+    "unused" levels --- those that do not occur in the data.  The idea
+    of having such levels is not as peculiar as it may seem if, say,
+    you are fitting a model to a subset of the original data.)
