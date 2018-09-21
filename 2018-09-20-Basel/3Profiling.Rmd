@@ -1,0 +1,436 @@
+---
+title: "Mixed-effects models with R"
+subtitle: "Part 3: Inference Based on Profiled Deviance"
+author: "Douglas Bates"
+date: "2018/09/20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: left, middle
+
+```{r setup,include=FALSE}
+options(width=65,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+library(lattice)
+library(lme4)
+lattice.options(default.theme = function() standard.theme())
+if (file.exists("classroom.rda")) {
+    load("classroom.rda")
+} else {
+    classroom <- within(read.csv("http://www-personal.umich.edu/~bwest/classroom.csv"),
+                    {
+                        classid <- factor(classid)
+                        schoolid <- factor(schoolid)
+                        sex <- factor(sex, labels = c("M","F"))
+                        minority <- factor(minority, labels = c("N", "Y"))
+                    })
+    save(classroom, file="classroom.rda")
+}
+if (file.exists("pr1.rda")) {
+    load("pr1.rda")
+} else {
+    pr1 <- profile(fm1M <- lmer(Yield ~ 1+(1|Batch), Dyestuff, REML=FALSE))
+    save(pr1, fm1M, file="pr1.rda")
+}
+if (file.exists("pr8.rda")) {
+    load("pr8.rda")
+} else {
+    pr8 <- profile(fm8 <- lmer(mathgain ~
+           mathkind + minority + ses + (1|classid) + (1|schoolid), classroom, REML=FALSE))
+    save(pr8, fm8, file="pr8.rda")
+}
+library(knitr)
+opts_chunk$set(prompt=TRUE,comment=NA)
+``` 
+
+# Likelihood ratio tests and deviance
+
+- In section 2 we described the use of likelihood ratio tests
+    (LRTs) to compare a reduced model (say, one that omits a
+    random-effects term) to the full model.
+
+- The test statistic in a LRT is the change in the deviance,
+    which is negative twice the log-likelihood.
+
+- We always use maximum likelihood fits (i.e. `REML=FALSE`)
+    to evaluate the deviance.
+
+- In general we calculate p-values for a LRT from a $\chi^2$
+    distribution with degrees of freedom equal to the difference in
+    the number of parameters in the models.
+
+- The important thing to note is that a likelihood ratio test is
+    based on fitting the model under each set of conditions.
+
+
+
+---
+class: left, middle
+
+# Profiling the deviance versus one parameter
+
+- There is a close relationship between confidence intervals and
+    hypothesis tests on a single parameter.  When,
+    e.g. $H_0:\beta_1=\beta_{1,0}$ versus $H_a:\beta_1\ne\beta_{1,0}$
+    is **not** rejected at level $\alpha$ then $\beta_{1,0}$ is
+    in a $1-\alpha$ confidence interval on the parameter $\beta_1$.
+
+- For linear fixed-effects models it is possible to determine
+    the change in the deviance from fitting the full model only.  For
+    mixed-effects models we need to fit the full model and all the
+    reduced models to perform the LRTs.
+
+- In practice we fit some of them and use interpolation.  The
+    `profile` function evaluates such a "profile" of the change
+    in the deviance versus each of the parameters in the model.
+
+---
+class: left, middle
+
+# Transforming the LRT statistic
+
+- The LRT statistic for a test of a fixed value of a single
+    parameter would have a $\chi^2_1$ distribution, which is the
+    square of a standard normal.
+
+- If a symmetric confidence interval were appropriate for the
+    parameter, the LRT statistic would be quadratic with respect to
+    the parameter.
+
+- We plot the square root of the LRT statistic because it is
+    easier to assess whether the plot looks like a straight line than
+    it is to assess if it looks like a quadratic.
+
+- To accentuate the straight line behavior we use the signed
+    square root transformation which returns the negative square root
+    to the left of the estimate and the positive square root to the right.
+
+- This quantity can be compared to a standard normal.  We write
+    it as $\zeta$
+
+
+---
+class: left, middle
+
+
+# Evaluating and plotting the profile
+
+```{r pr1plot,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
+print(xyplot(pr1, aspect=1.3, layout=c(3,1)))
+```
+
+- The parameters are $\sigma_b$, $\log(\sigma)$ ( $\sigma$ is the
+  residual standard deviation) and $\mu$.  The vertical lines delimit
+  50%, 80%, 90%, 95% and 99% confidence intervals.
+
+---
+class: center, middle
+
+
+# Alternative form of the profile plot
+
+```{r pr1plot2,dev='svg',echo=FALSE,fig.align='center',fig.height=2.5}
+print(xyplot(pr1, aspect=0.7, absVal=TRUE, strip=FALSE, strip.left=TRUE,layout=c(3,1)))
+```
+
+Numerical values of the confidence interval limits are obtained from `confint` applied to the profile
+```{r confintpr1}
+confint(pr1)
+``` 
+
+---
+class: left, middle
+
+# Changing the confidence level
+
+As for other methods for the `confint` generic, we use
+`level =` $\alpha$ to obtain a confidence level other than the
+default of $0.95$.
+```{r confintpr1.99}
+confint(pr1, level=0.99)
+``` 
+Note that the lower 99% confidence limit for $\sigma_1$ is undefined.
+
+---
+class: left, middle
+
+# Interpreting the univariate plots
+
+- A univariate profile $\zeta$ plot is read like a normal probability plot
+
+- a sigmoidal (elongated "S"-shaped) pattern like that for
+      the `(Intercept)` parameter indicates overdispersion
+      relative to the normal distribution.
+
+- a bending pattern, usually flattening to the right of the
+      estimate, indicates skewness of the estimator and warns us that
+      the confidence intervals will be asymmetric
+
+- a straight line indicates that the confidence intervals
+      based on the quantiles of the standard normal distribution are suitable
+
+- Note that the only parameter providing a more-or-less straight
+    line is $\sigma$ and this plot is on the scale of $\log(\sigma)$
+    not $\sigma$ or, even worse, $\sigma^2$.
+
+- We should expect confidence intervals on $\sigma^2$ to be
+    asymmetric.  In the simplest case of a variance estimate from an
+    i.i.d. normal sample the confidence interval is derived from
+    quantiles of a $\chi^2$ distribution which is quite asymmetric
+    (although many software packages provide standard errors of
+    variance component estimates as if they were meaningful).
+
+---
+class: left, middle
+# Profile $\zeta$ plots for $\log(\sigma)$, $\sigma$ and $\sigma^2$
+
+```{r sigmaprof,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
+zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
+zeta <- c(-rev(zeta), 0, zeta)
+spl <- attr(pr1, "forward")[[2]]
+endpts <- predict(attr(pr1, "backward")[[2]], zeta)$y
+
+fr <- data.frame(zeta = rep.int(zeta, 3),
+                 endpts = c(endpts, exp(endpts), exp(2*endpts)),
+                 pnm = gl(3, length(zeta)))
+print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
+             scales = list(x = list(relation = "free")),
+             xlab = NULL, ylab = expression(zeta), aspect = 1.3,
+             strip = strip.custom(
+             factor.levels = expression(log(sigma), sigma, sigma^2)),
+             panel = function(...) {
+                 panel.grid(h = -1, v = -1)
+                 panel.abline(h=0)
+                 panel.xyplot(...)
+                 ll <- current.panel.limits()$xlim
+                 lims <- switch(panel.number(), ll, log(ll), log(ll)/2)
+                 pr <- predict(spl, seq(lims[1], lims[2], len = 101))
+                 panel.lines(switch(panel.number(),
+                                    pr$x,
+                                    exp(pr$x),
+                                    exp(pr$x * 2)), pr$y)
+             }))
+```   
+- We can see moderate asymmetry on the scale of $\sigma$ and
+  stronger asymmetry on the scale of $\sigma^2$.
+
+- The issue of which of the ML or REML estimates of $\sigma^2$ are
+  closer to being unbiased is a red herring.  $\sigma^2$ is not a
+  sensible scale on which to evaluate the expected value of an estimator.
+
+---
+class: left, middle
+
+# Profile $\zeta$ plots for $\log(\sigma_1)$, $\sigma_1$ and $\sigma^2_1$
+
+```{r sigma1prof,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
+zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
+zeta <- c(-rev(zeta), 0, zeta)
+spl <- attr(pr1, "forward")[[1]]
+endpts <- predict(attr(pr1, "backward")[[1]], zeta)$y
+
+fr <- data.frame(zeta = rep.int(zeta, 3),
+                 endpts = c(log(endpts), endpts, endpts^2),
+                 pnm = gl(3, length(zeta)))
+## A mighty kludge here
+fr[1,] <- c(NA, 1.5, 1)
+fr[12,] <- c(NA, 0, 2)
+print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
+             scales = list(x = list(relation = "free")),
+             xlab = NULL, ylab = expression(zeta), aspect = 1.3,
+             strip = strip.custom(
+             factor.levels = expression(log(sigma[1]), sigma[1], sigma[1]^2)),
+             panel = function(...) {
+                 panel.grid(h = -1, v = -1)
+                 panel.abline(h = 0)
+                 panel.xyplot(...)
+                 ll <- (current.panel.limits()$xlim)[2]
+                 lims <- switch(panel.number(),
+                                c(1.5, exp(ll)),
+                                c(0, ll),
+                                c(0, sqrt(ll)))
+                 pr <- predict(spl, seq(lims[1], lims[2], len = 101))
+                 panel.lines(switch(panel.number(),
+                                    log(pr$x),
+                                    pr$x,
+                                    pr$x^2), pr$y)
+             }))
+```
+
+- For $\sigma_1$ the situation is more complicated because 0 is
+  within the range of reasonable values.  The profile flattens as
+  $\sigma\rightarrow0$ which means that intervals on $\log(\sigma)$
+  are unbounded.
+
+- Obviously the estimator of $\sigma^2_1$ is terribly skewed yet
+  most software ignores this and provides standard errors on variance
+  component estimates.
+
+\section{Density plots}
+
+---
+class: left, middle
+
+# Converting profile $\zeta$ to a density
+
+- We speak of a profile $\zeta$ plot as showing skewness,
+    especially for parameters such as $\sigma_1$ and $\sigma$.
+
+- Often it is easier to envision symmetry or skewness in terms
+    of a density plot.
+
+- If $\zeta$ is compared to a standard Gaussian distribution
+    then the corresponding cumulative distribution function is
+    $\Phi(\zeta)$, from which we can derive a density function.
+
+---
+class: center, middle
+
+# Profile-based densities for `fm1`
+
+```{r pr1dens,dev='svg',echo=FALSE,fig.height=4.5,fig.align='center'}
+print(densityplot(pr1, layout=c(1,3), strip=FALSE, strip.left=TRUE))
+```     
+
+---
+class: left, middle
+
+# Profile pairs plots
+
+- The information from the profile can be used to produce
+    pairwise projections of likelihood contours.  These correspond to
+    pairwise joint confidence regions.
+
+- Such a plot (next slide) can be somewhat confusing at first
+    glance.
+
+- Concentrate initially on the panels above the diagonal where
+    the axes are the parameters in the scale shown in the diagonal
+    panels.  The contours correspond to 50%, 80%, 90%, 95% and
+    99% pairwise confidence regions.
+
+- The two lines in each panel are "profile traces", which are
+    the conditional estimate of one parameter given a value of the other.
+
+- The actual interpolation of the contours is performed on the
+    $\zeta$ scale which is shown in the panels below the diagonal.
+
+
+
+---
+class: center, middle
+
+# Profile pairs for model `fm1`
+
+```{r pr1pairs,echo=FALSE,dev='svg',fig.align='center',fig.height=5}
+print(splom(pr1))
+```
+
+---
+class: left, middle
+
+# About those p-values
+
+- Statisticians have been far too successful in propagating
+    concepts of hypothesis testing and p-values, to the extent that
+    quoting p-values is essentially a requirement for publication in
+    some disciplines.
+
+- When models were being fit by hand calculation it was
+    important to use any trick we could come up with to simplify the
+    calculation.  Often the results were presented in terms of the
+    simplified calculation without reference to the original idea of
+    comparing models.
+
+- We often still present model comparisons as properties of
+    "terms" in the model without being explicit about the underlying
+    comparison of models with the term and without the term.
+
+- The approach I recommend for assessing the importance of
+    particular terms in the fixed-effects part of the model is to fit
+    with and without then use a likelihood ratio test (the
+    `anova` function).
+
+---
+class: left, middle
+
+# Hypothesis tests versus confidence intervals
+
+- As mentioned earlier, hypothesis tests and confidence
+    intervals are two sides of the same coin.
+
+- For a categorical covariate, it often makes sense to ask "Is
+    there a signficant effect for this factor?" which we could answer
+    with a p-value.  We may, in addition, want to know how large the
+    effect is and how precisely we have estimated it, i.e. a
+    confidence interval.
+
+- For a continuous covariate we generally want to know the
+    coefficient estimate and its precision (i.e. a confidence
+    interval) in preference to a p-value for a hypothesis test.
+
+- When we have many observations and only a moderate number of
+    fixed and random effects, the distribution of the fixed-effects
+    coefficients' estimators is well-approximated by a multivariate
+    normal derived from the estimates, their standard errors and correlations.
+
+- With comparatively few observations it is worthwhile using
+    profiling to check on the sensistivity of the fit to the values of
+    the coefficients.
+
+- As we have seen, estimates of variance components can be
+    poorly behaved and it is worthwhile using profiling to check their precision.
+
+---
+class: left, middle
+
+# Profiling a model for the `classroom` data
+
+```{r pr8plot,echo=FALSE,dev='svg',fig.align='center',fig.height=3}
+print(xyplot(pr8, absVal=TRUE, aspect=0.7, layout=c(4,2), strip=FALSE,
+             strip.left=TRUE, skip=rep.int(c(FALSE,TRUE,FALSE),c(3,1,4))))
+``` 
+
+- The fixed-effects coefficient estimates (top row) have good
+  normal approximations (i.e. a 95% confidence intervals will be closely
+  approximated by estimate $\pm$ 1.96 $\times$ standard error).
+
+- The estimators of $\sigma_1$, $\sigma_2$ and $\log(\sigma)$ are
+  also well approximated by a normal.  If anything, the estimators of
+  $\sigma_1$ and $\sigma_2$ are skewed to the left rather than skewed
+  to the right.
+
+---
+class: center, middle
+
+# Profile pairs for many parameters
+
+```{r pr8pairs,echo=FALSE,dev='svg',fig.align='center',fig.height=5}
+print(splom(pr8))
+```
+
+---
+class: left, middle
+
+# Summary  
+
+- Profile of the deviance with respect to the parameters in the
+    model allow us to assess the variability in the parameters in
+    terms of how well the model can be fit.
+
+- We apply the signed square root transformation to the change
+    in the deviance to produce $\zeta$.  When the Gaussian
+    approximation to the distribution of the parameter estimate is
+    appropriate, this function will be close to a straight line.
+
+- Profile zeta plots and profile pairs plots provide visual
+    assessment of the precision of parameter estimates.
+
+- Typically the distribution of variance component estimates is
+    highly skewed to the right and poorly approximated by a Gaussian,
+    implying that standard errors of such estimates are of little value.

@@ -1,0 +1,291 @@
+---
+title: "Fitting complex mixed-effects models to large data sets"
+author: "Douglas Bates"
+date: "2018-09-20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+class: left, top
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(knitr)
+library(lme4)
+library(lattice)
+data(Early, package="mlmRev")
+options(width=82,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+opts_chunk$set(prompt=TRUE,comment=NA,fig.height=5.4,fig.align='center')
+```
+
+# Mixed-effects models
+
+- Often in Psychology experiments the response is affected by several different sources of variability, in addition to the experimental factors.
+
+- Mixed-effects models, like many statistical models, describe the relationship between a *response* variable and one or more *covariates* recorded with it.
+
+- A linear mixed-effects model is based on a *linear predictor* expression incorporating *coefficients* that are estimated from the observed data.
+
+- Coefficients associated with the levels of a categorical covariate are sometimes called the *effects* of the levels.
+
+- When the levels of a covariate are fixed and reproducible (e.g. a covariate `sex` that has levels `male` and `female`) or an experimental condition (`primed` or `unprimed`) we incorporate them as **fixed-effects parameters**.
+
+- When the levels of a covariate correspond to the particular observational or experimental units in the experiment we incorporate them as **random effects**.  In experimental design we refer to them as *blocking factors*. Almost always "Subject" is a blocking factor.  When subjects are exposed to a common set of items, "Item" is also usually a blocking factor.
+
+---
+class: left, top
+
+# Practical considerations regarding fixed or random effects
+
+- In addition to the role of a factor in an experiment, the number of levels can influence the choice of random-effects versus fixed-effects to describe its effect.
+
+- A factor with a large number of levels is often modeled with random effects even if it represents a census of possible levels rather than a sample.
+    - e.g. my home state of Wisconsin has 72 counties.  In analyzing data across these counties I would tend to use random effects
+
+- Because variances and covariances are the (direct) parameters estimated for random-effects terms, it is not a good idea to use random-effects when the number of levels is small.
+
+- Early approaches to "repeated measures" anova depended strongly on having balanced data
+    - data from observational studies, especially large studies, are almost never balanced
+    - experimental studies, even if they are designed to produce balanced data can fail to produce balanced data
+---
+class: left, top
+
+# History of software for fitting linear mixed-effects models
+
+- **SAS PROC MIXED**, introduced in 1992, provided a way to fit more general mixed-effects models by *maximum likelihood* and related techniques.
+
+- Other software, **HLM** and **MLWin**, allowed for fitting mixed-effects models in cases of multiple, nested *levels* of variability modeled by random effects.
+
+- However, the computational methods could not easily deal with *crossed* or *partially crossed* data, such as "Subject/Item".
+
+- The **lme4** package for R was as the first, as far as I know, software to provide ML and REML estimation for linear mixed-effects models applied to "Subject/Item" type of data.  It is now widely used.
+
+---
+class: left, top
+
+# Sleep deprivation data - longitudinal data by subject
+
+- As a first exaple, consider this laboratory experiment measuring the effect of sleep deprivation on cognitive performance.
+
+- There were 18 subjects, chosen from the population of interest (long-distance truck drivers), in the 10 day trial.
+These subjects were restricted to 3 hours sleep per night during the trial.
+
+- On each day of the trial each subject's reaction time was measured.
+The reaction time shown here is the average of several measurements.
+
+- These data are *balanced* in that each subject is measured the same number of times and on the same occasions.
+
+---
+class: center, top
+
+# Reaction time versus days by subject
+
+```{r sleepxy,echo=FALSE,dev='svg',fig.height=4.2,fig.align='center'}
+print(xyplot(Reaction ~ Days | Subject, sleepstudy, aspect = "xy",
+                    layout = c(9,2), type = c("g", "p", "r"),
+                    index.cond = function(x,y) coef(lm(y ~ x))[1],
+                    xlab = "Days of sleep deprivation",
+                    ylab = "Average reaction time (ms)"))
+```
+
+
+---
+class: left, top
+
+# A preliminary mixed-effects model
+
+- We begin with a linear mixed model in which the fixed effects $[\beta_1,\beta_2]^\prime$ are the representative intercept and slope for the population and the random effects $\mathbf b_i=[b_{i1},b_{i2}]^\prime, i=1,\dots,18$ are the deviations in intercept and slope associated with subject $i$.
+
+- The random effects vector, $\mathbf b$, consists of the $18$ intercept effects followed by the $18$ slope effects.
+
+---
+class: left, top
+
+# Fitting the model (REML estimates)
+```{r sm1} 
+summary(fm1 <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy), corr=FALSE)
+``` 
+
+---
+class: left, top
+
+# Fitting the model (ML estimates)
+```{r sm1a} 
+summary(fm2 <- lmer(Reaction ~ Days + (Days|Subject), sleepstudy, REML=FALSE), corr=FALSE)
+``` 
+
+---
+class: left, top
+
+# Conclusions from the fit
+
+- A typical reaction time without sleep deprivation is about 250 ms. on this test.
+
+- A typical subject's reaction time increases about 10 ms./(day of sleep deprivation).
+
+- There is considerable variability in both the intercept ( $\widehat\sigma_1$ of 25 ms.) and the slope ( $\widehat\sigma_2$ of 6 ms.) within this sample
+
+- The within-subject correlation of the random effects is low (estimated as 0.07).  We do not reject the null hypothesis that it could be 0. (test not shown here)
+
+- The reaction times of these particular subjects and the change after sleep deprivation is not of particular interest.
+The goal is to characterize the variability in these quantities over the population from which they are drawn.
+
+- The random-effects "modes" (it is not quite correct to think of them as "estimates") are "shrunk" in toward the population mean, relative to the within-subject estimates.
+
+---
+class: center, top
+
+## Shrinkage from within-subject estimates is not uniform
+
+```{r shrinkage,echo=FALSE,dev='svg',fig.align='center',fig.height=5.2}
+df <- coef(lmList(Reaction ~ Days | Subject, sleepstudy))
+fclow <- subset(df, `(Intercept)` < 251)
+fchigh <- subset(df, `(Intercept)` > 251)
+cc1 <- as.data.frame(coef(fm2)$Subject)
+names(cc1) <- c("A", "B")
+df <- cbind(df, cc1)
+ff <- fixef(fm2)
+with(df,
+     print(xyplot(`(Intercept)` ~ Days, aspect = 1,
+                  x1 = B, y1 = A,
+                  panel = function(x, y, x1, y1, subscripts, ...) {
+                      panel.grid(h = -1, v = -1)
+                      x1 <- x1[subscripts]
+                      y1 <- y1[subscripts]
+                      larrows(x, y, x1, y1, type = "closed", length = 0.1,
+                              angle = 15, ...)
+                      lpoints(x, y,
+                              pch = trellis.par.get("superpose.symbol")$pch[2],
+                              col = trellis.par.get("superpose.symbol")$col[2])
+                      lpoints(x1, y1,
+                              pch = trellis.par.get("superpose.symbol")$pch[1],
+                              col = trellis.par.get("superpose.symbol")$col[1])
+                      lpoints(ff[2], ff[1], 
+                              pch = trellis.par.get("superpose.symbol")$pch[3],
+                              col = trellis.par.get("superpose.symbol")$col[3])
+                      ltext(fclow[,2], fclow[,1], row.names(fclow),
+                            adj = c(0.5, 1.7))
+                      ltext(fchigh[,2], fchigh[,1], row.names(fchigh),
+                            adj = c(0.5, -0.6))
+                  },
+                  key = list(space = "top", columns = 3,
+                  text = list(c("Mixed model", "Within-group", "Population")),
+                  points = list(col = trellis.par.get("superpose.symbol")$col[1:3],
+                  pch = trellis.par.get("superpose.symbol")$pch[1:3]))
+                  )))
+```
+
+---
+class: center, top
+
+## Strength of linear trend determines the amount of shrinkage
+
+```{r shrinkfit,echo=FALSE,dev='svg',fig.height=4,fig.align='center'}
+print(xyplot(Reaction ~ Days | Subject, sleepstudy, aspect = "xy",
+             layout = c(9,2), type = c("g", "p", "r"),
+             coef.list = df[,3:4],
+             panel = function(..., coef.list) {
+                 panel.xyplot(...)
+                 panel.abline(as.numeric(coef.list[packet.number(),]),
+                              col.line = trellis.par.get("superpose.line")$col[2],
+                              lty = trellis.par.get("superpose.line")$lty[2]
+                              )
+                 panel.abline(fixef(fm2),
+                              col.line = trellis.par.get("superpose.line")$col[4],
+                              lty = trellis.par.get("superpose.line")$lty[4]
+                              )
+             },
+             index.cond = function(x,y) coef(lm(y ~ x))[1],
+             xlab = "Days of sleep deprivation",
+             ylab = "Average reaction time (ms)",
+             key = list(space = "top", columns = 3,
+             text = list(c("Within-subject", "Mixed model", "Population")),
+             lines = list(col = trellis.par.get("superpose.line")$col[c(2:1,4)],
+             lty = trellis.par.get("superpose.line")$lty[c(2:1,4)]))))
+``` 
+
+- Subjects with a strong linear trend (e.g. 352, 337) define their individual coefficients.
+
+- Subjects without much linear trend (e.g. 330, 331) are shrunk toward the population mean values.
+
+---
+class: left, top
+
+# "Borrowing strength"
+
+- John Tukey said this shrinkage toward the population estimates constituted "borrowing strength" from the other members in the sample.
+
+- From the point of view of the numerical procedure, this has the effect of "regularizing" the calculation.  It makes solving for coefficient estimates numerically more stable.
+
+- Without the "shrinkage"" or "regularization" we cannot solve for estimates for an overall mean and effects for each subject.  We must define "contrasts".
+
+- With regularization we can estimate a population value and separate effects for each subject.
+
+---
+class: left, top
+
+# Estimates of variance components that are exactly zero
+
+- The likelihood criterion selects parameters that balance fidelity to the data against complexity of the model.
+
+- The measure of complexity of the model is the determinant of the variance of the random effects, given the data.
+
+- According to this criterion, the covariance matrix in a "good" model should collapse from an ellipsoidal shape to a flattened, "pancake" shape.
+
+- It would be like having one of the principal components without a contribution to the variance.
+
+- In the case of scalar random effects such a "singular" model has an estimated variance of the random effects of zero.
+
+- This is not a mistake.  It doesn't mean that there is no variation between subjects - it means that the level of variation between subjects is not in excess of what would be induced by the underlying variation in the response.
+
+---
+class: center, top
+
+# Data on early childhood cognitive development
+```{r EarlyData,dev='svg',echo=FALSE,fig.align='center',fig.height=5.2}
+print(xyplot(cog ~ age | id, Early, type = c("g",'b'), aspect = 'xy',
+             layout = c(29,4), between = list(y = c(0,0.5)),
+#             skip = rep(c(FALSE,TRUE),c(58,11)),
+             xlab = "Age (yr)",
+             ylab = "Cognitive development score",
+             scales = list(x = list(tick.number = 3, alternating = TRUE,
+                           labels = c("1","","2"), at = c(1,1.5,2))),
+             par.strip.text = list(cex = 0.7)))
+``` 
+
+---
+class: left, top
+
+
+# Fitting a model to the Early data
+
+- The `Early` data in the `mlmRev` package are from a
+    study on early childhood cognitive development as influenced by a
+    treatment.  These data are discussed in **Applied Longitudinal Data Analysis** (2003) by Singer and Willett.
+
+```{r fm12}
+(fm12 <- lmer(cog ~ tos+trt:tos+(tos|id), within(Early, tos <- age-0.5)))
+```   
+
+---
+class: left, top
+
+## Random effects from the Early data
+```{r fm12show,echo=FALSE,echo=FALSE,dev='svg',fig.height=4.5}
+plot(ranef(fm12))$id
+```
+Here is it obvious that there is a problem.  However, Singer and
+Willett did not detect this in model fits from **SAS PROC MIXED** or
+**MLWin**, both of which reported a non-singular covariance estimate.
+
+---
+class: left, top
+
+# Subject/Item
+
