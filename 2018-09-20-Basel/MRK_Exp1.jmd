@@ -1,0 +1,36 @@
+# Analysis of MRK16 data
+
+Load packages
+```{julia}
+using DataFramesMeta, InteractiveUtils, LinearAlgebra, MixedModels, RData
+```
+
+Load the data from experiment 1 and remove outliers (response time must be between 300 and 3000 ms.)
+```{julia;term=true}
+d2 = @where(load("MRK_Exp1.rds"), 300 .≤ :rt .≤ 3000);
+```
+
+A model with fixed-effects interactions and random-effects interactions with factors and two-factor interactions
+```{julia;term=true}
+@time m1 = fit(LinearMixedModel, @formula(rrt ~ 1 + F*P*Q*L*W + (1+F+P+Q+L+W | id)  + (1+P+Q+L+W | st)), d2);
+show(m1)
+```
+
+Summary of the optimization process
+```{julia;term=true}
+m1.optsum
+```
+
+A principal-components analysis of the fitted covariance matrices
+```{julia;term=true}
+Λ = getΛ(m1);
+Λ[1]   # relative covariance factor for st
+show(svdvals(Λ[1]))
+Λ[2]   # relative covariance factor for id
+show(svdvals(Λ[2]))
+```
+
+Record the version of Julia used for this document
+```{julia;term=true}
+versioninfo()
+```

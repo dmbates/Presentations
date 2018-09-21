@@ -12,7 +12,7 @@ output:
       highlightLines: true
       countIncrementalSlides: false
 ---
-class: left, middle
+class: left, top
 
 ```{r setup,include=FALSE}
 options(width=65,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
@@ -48,7 +48,7 @@ library(knitr)
 opts_chunk$set(prompt=TRUE,comment=NA)
 ``` 
 
-# Likelihood ratio tests and deviance
+## Likelihood ratio tests and deviance
 
 - In section 2 we described the use of likelihood ratio tests
     (LRTs) to compare a reduced model (say, one that omits a
@@ -70,9 +70,9 @@ opts_chunk$set(prompt=TRUE,comment=NA)
 
 
 ---
-class: left, middle
+class: left, top
 
-# Profiling the deviance versus one parameter
+## Profiling the deviance versus one parameter
 
 - There is a close relationship between confidence intervals and
     hypothesis tests on a single parameter.  When,
@@ -90,9 +90,9 @@ class: left, middle
     in the deviance versus each of the parameters in the model.
 
 ---
-class: left, middle
+class: left, top
 
-# Transforming the LRT statistic
+## Transforming the LRT statistic
 
 - The LRT statistic for a test of a fixed value of a single
     parameter would have a $\chi^2_1$ distribution, which is the
@@ -115,10 +115,10 @@ class: left, middle
 
 
 ---
-class: left, middle
+class: left, top
 
 
-# Evaluating and plotting the profile
+## Evaluating and plotting the profile
 
 ```{r pr1plot,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
 print(xyplot(pr1, aspect=1.3, layout=c(3,1)))
@@ -129,10 +129,10 @@ print(xyplot(pr1, aspect=1.3, layout=c(3,1)))
   50%, 80%, 90%, 95% and 99% confidence intervals.
 
 ---
-class: center, middle
+class: left, top
 
 
-# Alternative form of the profile plot
+## Alternative form of the profile plot
 
 ```{r pr1plot2,dev='svg',echo=FALSE,fig.align='center',fig.height=2.5}
 print(xyplot(pr1, aspect=0.7, absVal=TRUE, strip=FALSE, strip.left=TRUE,layout=c(3,1)))
@@ -144,9 +144,9 @@ confint(pr1)
 ``` 
 
 ---
-class: left, middle
+class: left, top
 
-# Changing the confidence level
+## Changing the confidence level
 
 As for other methods for the `confint` generic, we use
 `level =` $\alpha$ to obtain a confidence level other than the
@@ -157,9 +157,9 @@ confint(pr1, level=0.99)
 Note that the lower 99% confidence limit for $\sigma_1$ is undefined.
 
 ---
-class: left, middle
+class: left, top
 
-# Interpreting the univariate plots
+## Interpreting the univariate plots
 
 - A univariate profile $\zeta$ plot is read like a normal probability plot
 
@@ -186,8 +186,8 @@ class: left, middle
     variance component estimates as if they were meaningful).
 
 ---
-class: left, middle
-# Profile $\zeta$ plots for $\log(\sigma)$, $\sigma$ and $\sigma^2$
+class: left, top
+## Profile $\zeta$ plots for $\log(\sigma)$, $\sigma$ and $\sigma^2$
 
 ```{r sigmaprof,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
 zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
@@ -224,9 +224,9 @@ print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
   sensible scale on which to evaluate the expected value of an estimator.
 
 ---
-class: left, middle
+class: left, top
 
-# Profile $\zeta$ plots for $\log(\sigma_1)$, $\sigma_1$ and $\sigma^2_1$
+## Profile $\zeta$ plots for $\log(\sigma_1)$, $\sigma_1$ and $\sigma^2_1$
 
 ```{r sigma1prof,dev='svg',echo=FALSE,fig.align='center',fig.height=4}
 zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
@@ -274,9 +274,9 @@ print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
 \section{Density plots}
 
 ---
-class: left, middle
+class: left, top
 
-# Converting profile $\zeta$ to a density
+## Converting profile $\zeta$ to a density
 
 - We speak of a profile $\zeta$ plot as showing skewness,
     especially for parameters such as $\sigma_1$ and $\sigma$.
@@ -289,18 +289,18 @@ class: left, middle
     $\Phi(\zeta)$, from which we can derive a density function.
 
 ---
-class: center, middle
+class: center, top
 
-# Profile-based densities for `fm1`
+## Profile-based densities for `fm1`
 
 ```{r pr1dens,dev='svg',echo=FALSE,fig.height=4.5,fig.align='center'}
 print(densityplot(pr1, layout=c(1,3), strip=FALSE, strip.left=TRUE))
 ```     
 
 ---
-class: left, middle
+class: left, top
 
-# Profile pairs plots
+## Profile pairs plots
 
 - The information from the profile can be used to produce
     pairwise projections of likelihood contours.  These correspond to
@@ -323,18 +323,18 @@ class: left, middle
 
 
 ---
-class: center, middle
+class: center, top
 
-# Profile pairs for model `fm1`
+## Profile pairs for model `fm1`
 
 ```{r pr1pairs,echo=FALSE,dev='svg',fig.align='center',fig.height=5}
 print(splom(pr1))
 ```
 
 ---
-class: left, middle
+class: left, top
 
-# About those p-values
+## About those p-values
 
 - Statisticians have been far too successful in propagating
     concepts of hypothesis testing and p-values, to the extent that
@@ -357,9 +357,9 @@ class: left, middle
     `anova` function).
 
 ---
-class: left, middle
+class: left, top
 
-# Hypothesis tests versus confidence intervals
+## Hypothesis tests versus confidence intervals
 
 - As mentioned earlier, hypothesis tests and confidence
     intervals are two sides of the same coin.
@@ -387,9 +387,9 @@ class: left, middle
     poorly behaved and it is worthwhile using profiling to check their precision.
 
 ---
-class: left, middle
+class: left, top
 
-# Profiling a model for the `classroom` data
+## Profiling a model for the `classroom` data
 
 ```{r pr8plot,echo=FALSE,dev='svg',fig.align='center',fig.height=3}
 print(xyplot(pr8, absVal=TRUE, aspect=0.7, layout=c(4,2), strip=FALSE,
@@ -406,18 +406,18 @@ print(xyplot(pr8, absVal=TRUE, aspect=0.7, layout=c(4,2), strip=FALSE,
   to the right.
 
 ---
-class: center, middle
+class: center, top
 
-# Profile pairs for many parameters
+## Profile pairs for many parameters
 
 ```{r pr8pairs,echo=FALSE,dev='svg',fig.align='center',fig.height=5}
 print(splom(pr8))
 ```
 
 ---
-class: left, middle
+class: left, top
 
-# Summary  
+## Summary  
 
 - Profile of the deviance with respect to the parameters in the
     model allow us to assess the variability in the parameters in
