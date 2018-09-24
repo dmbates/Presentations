@@ -1,0 +1,54 @@
+---
+title: "Mixed-effects models with R"
+subtitle: "Part 4: Fitting Complex Models to Large Datasets"
+author: "Douglas Bates"
+date: "2018/09/20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: left, top
+
+```{r setup,include=FALSE}
+options(width=85,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+library(lattice)
+library(RePsychLing)
+library(lme4)
+library(JuliaCall)
+lattice.options(default.theme = function() standard.theme())
+library(knitr)
+opts_chunk$set(prompt=TRUE,comment=NA)
+``` 
+
+# Large experimental or observational studies
+
+- Some experiments or studies in Psychology involve collecting data on many subjects under a variety of experimental conditions, resulting in large data sets.
+
+- The experimental design in such studies incorporates *experimental factors* (e.g. priming, location, word-length)
+and *blocking factors* (e.g. subject, item)
+
+- In modeling the response the experimental factors are incorporated as fixed effects and the blocking factors as random effects, leading to the use of mixed-effects models.
+
+- Recent papers have advocated fitting "maximal models" in the random-effects terms, leading to difficult optimization problems
+
+---
+class: left, top
+
+# Data from Kliegl et al.
+
+```{r KKLdata}
+str(KKL)
+```
+
+---
+class: left, top
+```{r m0fit}
+form <- lrt ~ sze * (spt + obj + grv) * orn + (spt + obj + grv + orn + spt_orn + obj_orn + grv_orn | subj)
+proc.time(m0 <- lmer(form, KKL, REML=FALSE))
+```
+

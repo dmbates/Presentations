@@ -1,0 +1,675 @@
+---
+title: "Mixed-effects models with R"
+subtitle: "Part 5: Generalized Linear Mixed Models"
+author: "Douglas Bates"
+date: "2018/09/20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: left, top
+```{r setup, include=FALSE}
+options(width = 70, show.signif.stars = FALSE)
+data(Contraception, package = "mlmRev")
+library(lattice)
+library(lme4)
+lattice.options(default.theme = function() standard.theme())
+library(knitr)
+opts_chunk$set(prompt=TRUE,comment=NA)
+``` 
+
+# Generalized Linear Mixed Models
+
+- When using linear mixed models (LMMs) we assume that the
+    response being modeled is on a continuous scale.
+
+- Sometimes we can bend this assumption a bit if the response is
+    an ordinal response with a moderate to large number of levels.
+    For example, the Scottish secondary school test results in the
+    `mlmRev` package are integer values on the scale of 1 to 10
+    but we analzye them on a continuous scale.
+
+- However, an LMM is not suitable for modeling a binary
+    response, an ordinal response with few levels or a response that
+    represents a count. For these we use generalized linear mixed
+    models (GLMMs).
+
+- To describe GLMMs we return to the representation of the
+    response as an $n$-dimensional, vector-valued, random variable,
+    $\bc Y$, and the random effects as a $q$-dimensional,
+    vector-valued, random variable, $\mathcal{B}$.
+
+---
+class: left, top
+
+
+# Parts of LMMs carried over to GLMMs
+
+- Random variables
+    - $\mathcal Y$ the response variable
+    - $\mathcal{B}$ the (possibly correlated) random effects
+    - $\mathcal U$ the orthogonal random effects, such that $\mathcal B=\Lambda^\prime\mathcal U$
+
+- Parameters
+    - $\beta$ - fixed-effects coefficients
+    - $\sigma$ - the common scale parameter (not always used)
+    - $\theta$ - parameters that determine $\mathrm{Var}(\mathcal B)=\sigma^2\Lambda\Lambda^\prime$ 
+
+- Some matrices
+    - $\mathbf{X}$ the $n\times p$ model matrix for $\beta$
+    - $\mathbf{Z}$ the $n\times q$ model matrix for $\mathbf b$
+    - $\Lambda$ relative covariance factor as above
+
+
+---
+class: left, top
+
+# The conditional distribution $\mathcal{Y}|\mathcal{U}$
+
+- For GLMMs, the marginal distribution,
+    $\mathcal{B}\sim\mathcal{N}\left(\mathbf 0,\Sigma_\theta\right)$ is the same as in LMMs except
+    that $\sigma^2$ is omitted.  We define $\mathbf U\sim\mathcal{N}(\mathbf 0,\mathbf I_q)$ such that
+    $\mathcal{B}=\Lambda\mathcal U$.
+
+- For GLMMs we retain some of the properties of the conditional
+    distribution for a LMM
+$$(\mathcal Y|\mathcal U=\mathbf u)\sim\mathcal{N}\left(\mu_{\mathcal Y|\mathcal U},\sigma^2\mathbf I\right)\text{ where }
+      \mu_{\mathcal Y|\mathcal U}(\mathbf u)=
+      \mathbf X\beta+\mathbf Z\Lambda\mathbf u$$
+
+- The conditional distribution, $\mathcal Y|\mathcal{U}=\mathbf u$, depends
+      on $\mathbf u$ only through the conditional mean,
+      $\mu_{\mathcal Y|\mathcal U}(\mathbf u)$.
+
+- Elements of $\mathcal  Y$ are *conditionally independent*.  That is, the distribution,
+      $\mathcal Y|\mathcal U=\mathbf u$,  is completely
+      specified by the univariate, conditional distributions,
+      $\mathcal{Y}_i|\mathcal U,i=1,\dots,n$.
+
+- These univariate, conditional distributions all have the same form. They differ only in their means.
+
+- GLMMs differ from LMMs in the form of the univariate, conditional distributions and in how $\mu_{\mathcal Y|\mathcal U}(\mathbf u)$ depends on $\mathbf u$.
+    
+---
+class: left, top
+
+
+  # Some choices of univariate conditional distributions
+
+- Typical choices of univariate conditional distributions are:
+
+- The *Bernoulli* distribution for binary (0/1) data, which has
+      probability mass function
+$$p(y|\mu)= \mu^{y}(1-\mu)^{1 - y},\quad 0<\mu< 1,\quad y = 0,1$$
+- Several independent binary responses can be represented as a *binomial* response, but only if all the Bernoulli distributions have the same mean.
+- The *Poisson* distribution for count ($0,1,\dots$) data, which has probability mass function
+$$p(y|\mu)= e^{-\mu}\frac{\mu^{y}}{y!},\quad 0<\mu,\quad y = 0,1,2,\dots$$
+
+- All of these distributions are completely specified by the conditional mean.  This is different from the conditional normal (or Gaussian) distribution, which also requires the common scale parameter, $\sigma$.
+
+---
+class: left, top
+
+
+# The link function, $\mathbf g$
+
+- When the univariate conditional distributions have constraints
+    on $\mu$, such as $0<\mu<1$ (Bernoulli) or $0<\mu$ (Poisson), we
+    cannot define the conditional mean,
+    $\mu_{\mathcal Y|\mathcal U}$, to be equal to the
+    linear predictor, $\mathbf X\beta+\mathbf X\Lambda\mathbf u$,
+    which is unbounded.
+
+- We choose an invertible, univariate *link function*, $g$,
+    such that $\eta=g(\mu)$ is unconstrained.  The vector-valued link
+    function, $\mathbf g$, is defined by applying $g$ component-wise.
+$$\eta=\mathbf g(\mu)\quad\text{where}\quad\eta_i=g(\mu_i),\quad i=1,\dots,n$$
+- We require that $g$ be invertible so that $\mu=g^{-1}(\eta)$
+    is defined for $-\infty<\eta<\infty$ and is in the appropriate
+    range ($0<\mu<1$ for the Bernoulli or $0<\mu$ for the
+    Poisson).  The vector-valued inverse link, $\mathbf g^{-1}$, is defined
+    component-wise.
+
+---
+class: left, top
+
+
+# "Canonical" link functions
+
+- There are many choices of invertible scalar link functions, $g$,
+    that we could use for a given set of constraints.
+
+- For the Bernoulli and Poisson distributions, however, one link
+    function arises naturally from the definition of the probability
+    mass function.  (The same is true for a few other, related but
+    less frequently used, distributions, such as the gamma distribution.)
+
+- To derive the canonical link, we consider the logarithm of the
+    probability mass function (or, for continuous distributions, the
+    probability density function).
+
+- For distributions in this "exponential" family, the
+    logarithm of the probability mass or density can be written as a
+    sum of terms, some of which depend on the response, $y$, only and
+    some of which depend on the mean, $\mu$, only.  However, only one
+    term depends on \textbf{both} $y$ and $\mu$, and this term has the
+    form $y\cdot g(\mu)$, where $g$ is the canonical link.
+
+---
+class: left, top
+
+
+# The canonical link for the Bernoulli distribution
+
+- The logarithm of the probability mass function is
+$$\log(p(y|\mu))=\log(1-\mu)+y\log\left(\frac{\mu}{1-\mu}\right),\;0<\mu<1,\;y=0,1 .$$
+- Thus, the canonical link function is the *logit* link
+$$\eta=g(\mu)=\log\left(\frac{\mu}{1-\mu}\right).$$
+- Because $\mu=P[\mathcal{Y} = 1]$, the quantity $\mu/(1-\mu)$ is the odds ratio (in the range $(0, \infty)$)
+    and $g$ is the logarithm of the odds ratio, sometimes called "log odds".
+- The inverse link is
+$$\mu=g^{-1}(\eta)=\frac{e^\eta}{1+e^\eta}=\frac{1}{1+e^{-\eta}}$$
+
+---
+class: center, top
+
+# Plot of canonical link for the Bernoulli distribution
+
+```{r BernoulliLink,dev='svg',echo=FALSE,fig.align='center',fig.height=5}
+logit <- function(mu) {
+  mu <- pmax(.Machine$double.eps, pmin(1-.Machine$double.eps, mu))
+  log(mu/(1-mu))
+}
+mu <- seq(0.001, 0.999, len = 999)
+print(xyplot(logit(mu) ~ mu, type = c("g", "l"), 
+             xlab = expression(mu), 
+             ylab = expression(eta == log(frac(mu, 1-mu)))))
+``` 
+
+
+---
+class: center, top
+
+
+# Plot of inverse canonical link for the Bernoulli distribution
+```{r BernoulliinvLink,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+linkinv <- function(eta) 1/(1+exp(-eta))
+eta <- seq(-7,7,len = 701)
+print(xyplot(linkinv(eta) ~ eta, type = c("g","l"), 
+             xlab = expression(eta),
+             ylab = expression(mu == frac(1,1+exp(-eta)))))
+``` 
+
+
+---
+class: left, top
+
+
+# The canonical link for the Poisson distribution
+
+- The logarithm of the probability mass is
+$$\log(p(y|\mu))=\log(y!)-\mu+y\log(\mu)$$
+- Thus, the canonical link function for the Poisson is the *log* link
+$$\eta=g(\mu)=\log(\mu)$$
+- The inverse link is
+$$\mu=g^{-1}(\eta)=e^{\eta}$$
+
+---
+class: left, top
+
+
+# The canonical link related to the variance
+
+- For the canonical link function, the derivative of its inverse is the variance of the response.
+
+- For the Bernoulli, the canonical link is the logit and the
+    inverse link is $\mu=g^{-1}(\eta)=1/(1+e^{-\eta})$. Then
+$$\frac{d\mu}{d\eta}=\frac{e^{-\eta}}{(1+e^{-\eta})^2}=\frac{1}{1+e^{-\eta}}\frac{e^{-\eta}}{1+e^{-\eta}}=\mu(1-\mu)= \mathrm{Var}(\mathcal{Y})$$
+- For the Poisson, the canonical link is the log and the inverse
+    link is $\mu=g^{-1}(\eta)=e^\eta$.  Then
+$$\frac{d\mu}{d\eta}=e^\eta=\mu=\mathrm{Var}(\mathcal{Y})$$
+
+---
+class: left, top
+
+# The unscaled conditional density of $\mathcal U|\mathcal Y=\mathbf y$
+
+- As in LMMs we evaluate the likelihood of the parameters, given the data, as
+$$L(\theta,\beta|\mathbf y)=\int_{\mathbb{R}^q}[\mathcal Y|\mathcal U](\mathbf y|\mathbf u)\,[\mathcal U](\mathbf u)\, d\mathbf u ,$$
+- The product $[\mathcal Y|\mathcal U](\mathbf y|\mathbf u)[\mathcal U](\mathbf u)$ is the unscaled (or
+    *unnormalized*) density of the conditional distribution $\mathcal U|\mathcal Y$.
+- The density $[\mathcal U](\mathbf u)$ is a spherical Gaussian density $\frac{1}{(2\pi)^{q/2}} e^{-\|\mathbf u\|^2/2}$.
+- The expression $[\mathcal Y|\mathcal U](\mathbf y|\mathbf u)$ is the value of a probability mass function or a probability
+    density function, depending on whether $\mathcal{Y}_i|\mathcal U$ is discrete or continuous.
+- The linear predictor is $\mathbf g(\mu_{\mathcal Y|\mathcal U})=\eta=\mathbf X\beta+\mathbf Z\Lambda\mathbf u$.
+    Alternatively, we can write the conditional mean of
+    $\mathcal Y$, given $\mathcal U$, as
+$$\mu_{\mathcal Y|\mathcal U}(\mathbf u)= \mathbf g^{-1}\left(\mathbf X\beta+\mathbf Z\Lambda\mathbf u\right)$$
+
+---
+class: left, top
+
+
+# The conditional mode of $\mathcal U|\mathcal Y=\mathbf y$
+
+- In general the likelihood, $L(\theta,\beta|\mathbf y)$ does not have a closed form. To approximate this value, we first determine
+    the *conditional mode*
+$$\tilde{\mathbf u}(\mathbf y|\theta,\beta)=\arg\max_{\mathbf u}[\mathcal Y|\mathcal U](\mathbf y|\mathbf u)\,[\mathcal U](\mathbf u)$$
+    using a quadratic approximation to the logarithm of the unscaled conditional density.
+  
+- This optimization problem is (relatively) easy because the quadratic approximation to the logarithm of the unscaled
+    conditional density can be written as a penalized, weighted residual sum of squares,
+
+$$\tilde{\mathbf u}(\mathbf y|\theta,\beta)=\arg\min_{\mathbf u}\left\|
+\begin{bmatrix}
+  \mathbf W^{1/2}(\mu)\left(\mathbf y -\mu_{\mathcal Y|\mathcal U}(\mathbf u)\right)\\
+          -\mathbf u
+\end{bmatrix}
+\right\|^2$$
+where $\mathbf W(\mu)$ is the diagonal weights matrix.  The weights are the inverses of the variances of the $\mathcal{Y}_i$.
+
+---
+class: left, top
+
+# The PIRLS algorithm
+
+- Parameter estimates for generalized linear models (without random effects) are usually determined by iteratively reweighted
+    least squares (IRLS), an incredibly efficient algorithm.  PIRLS is the penalized version.  It is iteratively reweighted in the
+    sense that parameter estimates are determined for a fixed weights
+    matrix $\mathbf W$ then the weights are updated to the current
+    estimates and the process
+    repeated.
+
+- For fixed weights we solve
+$$\min_{\mathbf u}\left\|
+\begin{bmatrix}
+  \mathbf W^{1/2}\left(\mathbf y -\mu_{\mathcal Y|\mathcal U}(\mathbf u)\right)\\
+          -\mathbf u
+\end{bmatrix}\right\|^2$$
+    as a nonlinear least squares problem with update, $\delta_{\mathbf u}$, given by
+$$\mathbf P\left(\Lambda^\prime\mathbf Z^\prime\mathbf M\mathbf W\mathbf M\mathbf Z\Lambda+\mathbf I_q\right)\mathbf P^\prime
+      \delta_{\mathbf u}=\Lambda^\prime\mathbf Z^\prime\mathbf M\mathbf W(\mathbf y-\mu) - \mathbf u$$
+    where $\mathbf M=d\mu/d\eta$ is the (diagonal) Jacobian matrix.
+    Recall that for the canonical link, $\mathbf M= \text{Var}(\mathcal Y|\mathcal U)=\mathbf W^{-1}$.
+
+---
+class: left, top
+
+
+# The Laplace approximation to the deviance
+
+- At convergence, the sparse Cholesky factor, $\mathbf L$, used to
+    evaluate the update is
+$$\mathbf L\mathbf L^\prime =
+      \mathbf P\left(\Lambda^\prime\mathbf Z^\prime\mathbf M\mathbf W\mathbf M\mathbf Z\Lambda+\mathbf I_q\right)\mathbf P^\prime$$
+    or
+$$\mathbf L\mathbf L^\prime=\mathbf P\left(\Lambda^\prime\mathbf Z^\prime\mathbf M\mathbf Z\Lambda+\mathbf I_q\right)\mathbf P^\prime$$
+    if we are using the canonical link.
+
+- The integrand of the likelihood is approximately a constant
+    times the density of the $\mathcal{N}(\tilde{\mathbf u},\mathbf L\mathbf L^\prime)$ distribution.
+
+- On the deviance scale (negative twice the log-likelihood) this
+    corresponds to
+$$d(\beta,\theta|\mathbf y)=d_g(\mathbf y,\mu(\tilde{\mathbf u}))+\|\tilde{\mathbf u}\|^2+\log(|\mathbf L|^2)$$
+    where $d_g(\mathbf y,\mu(\tilde{\mathbf u}))$ is the GLM deviance for $\mathbf y$ and $\mu$.
+
+---
+class: left, top
+
+
+# Modifications to the algorithm
+
+- Notice that this deviance depends on the fixed-effects
+    parameters, $\beta$, as well as the variance-component
+    parameters, $\theta$.  This is because $\log(|\mathbf L|^2)$
+    depends on $\mu_{\mathcal Y|\mathcal U}$ and, hence, on $\beta$.  For LMMs $\log(|\mathbf L|^2)$ depends only on
+    $\theta$.
+
+- In practice we begin by optimizing w.r.t.
+    $\mathbf u$ and $\beta$ simultaneously, evaluating the Laplace
+    approximation and optimizing this w.r.t. $\theta$.  Then we
+    use a "pure" Laplace approximation which is optimized
+    w.r.t. both $\beta$ and $\theta$.
+
+- The second stage can be suppressed with the optional argument
+    `nAGQ = 0`.  Another argument `verbose = 2` shows the
+    two stages explicitly
+
+- Another approach is adaptive Gauss-Hermite quadrature
+    (AGQ).  This has a similar structure to the Laplace approximation
+    but is based on more evaluations of the unscaled conditional
+    density near the conditional modes.  It is only appropriate for
+    models in which the random effects are associated with only one
+    grouping factor
+
+
+---
+class: left, top
+
+# Contraception data
+
+- One of the data sets in the `"mlmRev"` package, derived
+    from data files available on the multilevel modelling web site, is
+    from a fertility survey of women in Bangladesh.
+
+- One of the (binary) responses recorded is whether or not the
+    woman currently uses artificial contraception.
+
+- Covariates included the woman's age (on a centered scale),
+    the number of live children she had, whether she lived in an urban
+    or rural setting, and the district in which she lived.
+
+- Instead of plotting such data as points, we use the 0/1
+    response to generate scatterplot smoother curves versus age for
+    the different groups.
+
+---
+class: center, top
+
+
+# Contraception use versus age by urban and livch
+
+```{r Contra1,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+xyplot(ifelse(use == "Y", 1, 0) ~ age|urban, Contraception, groups = livch, type = c("g", "smooth"),
+       auto.key = list(space = "top", points = FALSE, lines = TRUE, columns = 4), ylab = "Proportion", xlab = "Centered age")
+``` 
+
+
+
+---
+class: left, top
+
+# Comments on the data plot
+
+- These observational data are unbalanced (some districts have
+    only $2$ observations, some have nearly $120$).  They are not
+    longitudinal (no "time" variable).
+
+- Binary responses have low per-observation information content
+    (exactly one bit per observation).  Districts with few
+    observations will not contribute strongly to estimates of random effects.
+
+- Within-district plots will be too imprecise so we only examine
+    the global effects in plots.
+
+- The comparisons on the multilevel modelling site are for
+    fits of a model that is linear in `age`, which is clearly
+    inappropriate.
+
+- The form of the curves suggests at least a quadratic in
+    `age`.
+
+- The urban versus rural differences may be additive.
+
+- It appears that the `livch` factor could be dichotomized
+    into "0" versus "1 or more".
+
+---
+class: left, top
+
+
+# Preliminary model using Laplacian approximation
+
+```{r cm1,echo=FALSE}
+summary(cm1 <- glmer(use ~ age + I(age^2) + urban + livch + (1|district), 
+             Contraception, binomial, nAGQ=0L), corr = FALSE)
+``` 
+
+---
+class: left, top
+
+# Comments on the model fit
+
+- This model was fit using the Laplacian approximation to the
+    deviance.
+
+- There is a highly significant quadratic term in `age`.
+
+- The linear term in `age` is not significant but we retain
+    it because the `age` scale has been centered at an arbitrary
+    value (which, unfortunately, is not provided with the data).
+
+- The `urban` factor is highly significant (as indicated by
+    the plot).
+
+- Levels of `livch` greater than 0 are significantly
+    different from 0 but may not be different from each other.
+
+```{r ch,echo=FALSE}
+Contraception$ch <- factor(Contraception$livch != 0, labels = c("N","Y"))
+``` 
+---
+class: left, top
+
+
+# Reduced model with dichotomized livch
+```{r cm2,echo=FALSE}
+summary(cm2 <- glmer(use ~ age + I(age^2) + urban + ch + (1|district),
+                  Contraception, binomial, nAGQ=0L), corr = FALSE)
+```
+
+
+---
+class: left, top
+
+# Comparing the model fits
+
+- A likelihood ratio test can be used to compare these nested models.
+
+```{r anovac}  
+anova(cm2, cm1)
+``` 
+
+- The large p-value indicates that we would not reject `cm2`
+  in favor of `cm1` hence we prefer the more parsimonious `cm2`.
+- The plot of the scatterplot smoothers according to live children
+  or none indicates that there may be a difference in the age pattern
+  between these two groups.
+
+---
+class: center, top
+
+
+# Contraception use versus age by urban and ch
+
+```{r Contra2,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+xyplot(ifelse(use == "Y", 1, 0) ~ age|urban, Contraception, groups = ch, type = c("g", "smooth"),
+       auto.key = list(space = "top", points = FALSE, lines = TRUE, columns = 2),
+       ylab = "Proportion", xlab = "Centered age")
+``` 
+
+---
+class: left, top
+
+
+# Allowing age pattern to vary with ch
+```{r cm3,echo=FALSE}
+summary(cm3 <- glmer(use ~ age*ch + I(age^2) + urban + (1|district),
+                   Contraception, binomial), corr = FALSE)
+```
+
+
+---
+class: center, top
+
+
+# Prediction intervals on the random effects
+
+```{r ContraCat,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+qqmath(ranef(cm3, condVar=TRUE), strip=FALSE)[[1]]
+``` 
+
+
+
+---
+class: left, top
+
+# Extending the random effects
+
+- We may want to consider allowing a random effect for
+    urban/rural by district. This is complicated by the fact the many
+    districts only have rural women in the study
+
+```{r urbanRural,echo=FALSE}  
+cat(head(capture.output(xtabs(~urban+district, Contraception)),7),sep='\n')
+``` 
+
+
+---
+class: left, top
+
+
+  # Including a random effect for urban by district
+```{r cm4,echo=FALSE}
+(cm4 <- glmer(use ~ age*ch + I(age^2) + urban + (urban|district),
+              Contraception, binomial))
+```
+
+
+---
+class: left, top
+
+# Significance of the additional random effect
+```{r anovacm4}  
+anova(cm4,cm3)
+``` 
+
+- The additional random effect is highly significant in this test.
+
+- Most of the prediction intervals still overlap zero.
+
+- A scatterplot of the random effects shows several random effects
+  vectors falling along a straight line.  These are the districts with
+  all rural women or all urban women.
+
+---
+class: center, top
+
+# Prediction intervals for the bivariate random effects
+
+```{r ContraCat2,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+qqmath(ranef(cm4, condVar=TRUE))$district
+``` 
+
+---
+class: center, top
+
+# Scatter plot of the BLUPs
+```{r ContraSc,dev='svg',echo=FALSE,fig.height=5.4,fig.align='center'}
+plot(ranef(cm4), type = c("g","p"), aspect = 1)$district
+``` 
+
+---
+class: left, top
+
+# Nested simple, scalar random effects versus vector-valued
+```{r cm5,echo=FALSE}
+summary(cm5 <- glmer(use ~ age*ch + I(age^2) + urban + (1|urban:district) + (1|district),
+                   Contraception, binomial), corr=FALSE)
+```
+
+---
+class: left, top
+
+
+# Using the interaction term only
+```{r cm6,echo=FALSE}
+summary(cm6 <- glmer(use ~ age*ch + I(age^2) + urban + (1|urban:district),
+                   Contraception, binomial), corr=FALSE)
+```
+
+---
+class: left, top
+
+# Comparing models with random effects for interactions
+```{r anovacm654}  
+anova(cm6,cm5,cm4)
+``` 
+
+
+- The random effects seem to best be represented by a separate
+  random effect for urban and for rural women in each district.
+
+- The districts with only urban women in the survey or with only
+  rural women in the survey are naturally represented in this model.
+
+---
+class: left, top
+
+# Showing the optimization stages
+```{r cm6stages}
+cm6 <- glmer(use ~ age*ch + I(age^2) + urban + (1|urban:district),
+              Contraception, binomial, verbose=2L)
+```   
+
+---
+class: left, top
+
+# Conclusions from the example
+
+- Again, carefully plotting the data is enormously helpful in formulating the model.
+
+- Observational data tend to be unbalanced and have many more
+    covariates than data from a designed experiment.  Formulating a
+    model is typically more difficult than in a designed experiment.
+
+- A generalized linear model is fit with the function
+    `glmer()` which requires a `family` argument.  Typical
+    values are `binomial` or `poisson`
+
+- Profiling is not provided for GLMMs at present but will be
+    added.
+
+- We use likelihood-ratio tests and z-tests in the model
+    building.
+
+---
+class: left, top
+
+
+# A word about overdispersion
+
+- In many application areas using "pseudo" distribution
+    families, such as `quasibinomial` and `quasipoisson`, is
+    a popular and well-accepted technique for accomodating variability
+    that is apparently larger than would be expected from a binomial
+    or a Poisson distribution.
+
+- This amounts to adding an extra parameter, like $\sigma$, the
+    common scale parameter in a LMM, to the distribution of the response.
+
+- It is possible to form an estimate of such a quantity during
+    the IRLS algorithm but it is an artificial construct.  There is no
+    probability distribution with such a parameter.
+
+- I find it difficult to define maximum likelihood estimates
+    without a probability model.  It is not clear how this
+    "distribution which is not a distribution" could be incorporated
+    into a GLMM.  This, of course, does not stop people from doing it
+    but I don't know what the estimates from such a model would mean.
+
+---
+class: left, top
+
+
+# Summary
+
+- GLMMs allow for the conditional distribution, $\mathcal Y|\mathcal B=\mathbf b$, to be other than a Gaussian.  A Bernoulli (or, more generally, a binomial) distribution is used to model binary or binomial responses.  A Poisson distribution is used to model responses that are counts.
+
+- The conditional mean depends upon the linear predictor, $\mathbf X\beta+\mathbf Z\mathbf b$, through the inverse link function, $\mathbf g^{-1}$.
+
+- The conditional mode of the random effects, given the observed
+    data, $\mathbf y$, is determined through penalized iteratively
+    reweighted least squares (PIRLS).
+
+- We optimize the Laplace approximation at the conditional mode
+    to determine the mle's of the parameters.  In some simple cases, a
+    more accurate approximation, adaptive Gauss-Hermite quadrature
+    (AGQ), can be used instead, at the expense of greater
+    computational complexity.

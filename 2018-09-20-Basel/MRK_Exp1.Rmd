@@ -1,0 +1,33 @@
+---
+title: "Douglas Bates"
+author: "Analysis of MRK17 data in lme4"
+date: "September 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE, prompt=TRUE, comment=NA)
+library(lme4)
+```
+
+## Analysis of the Masson-Rune-Kleigl data
+
+These data are from a 2017 paper by Masson, Rune and Kleigl
+```{r datainput}
+d <- readRDS("/var/tmp/Presentations/2018-09-20-Basel/MRK_Exp1.rds")
+d2 <- d[300 <= d$rt && d$rt <= 3000, ]
+```
+
+```{r fit}
+system.time(m1 <- lmer(rrt ~ 1 + F*P*Q*L*W + (1+F+P+Q+L+W | id)  + (1+P+Q+L+W | st)), d2, REML=FALSE, control=lmerControl(calc.derivs = FALSE))
+summary(m1, corr=FALSE)
+```
+
+
+```{r fit}
+system.time(m2 <- lmer(rrt ~ 1 + F*P*Q*L*W + (1+F+P+Q+L+W | id)  + (1+P+Q+L+W | st), d2, REML=FALSE, 
+            control=lmerControl(calc.derivs = FALSE, optimizer="nloptwrap", optCtrl=list(method="LN_BOBYQA"))))
+summary(m2, corr=FALSE)
+```
+

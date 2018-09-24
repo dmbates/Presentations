@@ -6,13 +6,19 @@ using DataFramesMeta, InteractiveUtils, LinearAlgebra, MixedModels, RData
 ```
 
 Load the data from experiment 1 and remove outliers (response time must be between 300 and 3000 ms.)
+Select the columns of interest.
+Convert the two-level factors to the [-1, 1] encoding as that is more stable than [-0.5, 0.5] when forming high-order interactions.
+
 ```{julia;term=true}
-d2 = @where(load("MRK_Exp1.rds"), 300 .≤ :rt .≤ 3000);
+d2 = @linq load("MRK_Exp1.rds") |>
+           where(300 .≤ :rt .≤ 3000) |>
+           select(:rrt, :P, :F, :Q, :L, :W, :id, :st) |>
+           transform(P = 2 .* :P, F = 2 .* :F, Q = 2 .* :Q, L = 2 .* :L, W = 2 .* :W)
 ```
 
 A model with fixed-effects interactions and random-effects interactions with factors and two-factor interactions
 ```{julia;term=true}
-@time m1 = fit(LinearMixedModel, @formula(rrt ~ 1 + F*P*Q*L*W + (1+F+P+Q+L+W | id)  + (1+P+Q+L+W | st)), d2);
+@time m1 = fit(LinearMixedModel, @formula(rrt ~ 1 + F*P*Q*L*W + (1+P+Q+L+W | st) + (1+F+P+Q+L+W | id)), d2);
 show(m1)
 ```
 
@@ -21,13 +27,29 @@ Summary of the optimization process
 m1.optsum
 ```
 
-A principal-components analysis of the fitted covariance matrices
+The estimated covariance matrix factors are
 ```{julia;term=true}
-Λ = getΛ(m1);
-Λ[1]   # relative covariance factor for st
-show(svdvals(Λ[1]))
-Λ[2]   # relative covariance factor for id
-show(svdvals(Λ[2]))
+m1.λ[1]  # for shown target (st)
+```
+and
+```{julia;term=true}
+m1.λ[2]  # for subject (id)
+```
+
+The squares of the singular values of these matrices are on the scale of variances of principal components
+```{julia;term=true}
+var1 = abs2.(svdvals(m1.λ[1]));
+show(var1)
+```
+```{julia;term=true}
+var2 = abs2.(svdvals(m1.λ[2]));
+show(var2)
+```
+
+In terms of the cumulative proportion of the variance these are
+```{julia;term=true}
+show(cumsum(var1) ./ sum(var1))
+show(cumsum(var2) ./ sum(var2))
 ```
 
 Record the version of Julia used for this document

@@ -1,0 +1,378 @@
+---
+title: "Mixed-effects models with R"
+subtitle: "Part 4: Linear Mixed-Effects Model Theory"
+author: "Douglas Bates"
+date: "2018/09/20 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      ratio: "16:9"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+class: left, top
+
+# Definition of linear mixed models
+
+- As previously stated, we define a linear mixed model in terms
+    of two random variables: the $n$-dimensional $\mathcal Y$ and the
+    $q$-dimensional $\mathcal B$
+    
+- The probability model specifies the conditional distribution
+
+$$\left(\mathcal Y|\mathcal B=\mathbf b\right)\sim
+        \mathcal{N}\left(\mathbf Z\mathbf b+\mathbf X\beta,\sigma^2\mathbf I_n\right)$$
+    and the unconditional distribution
+$$\mathcal B\sim\mathcal{N}\left(\mathbf 0,\Sigma_\theta\right) .$$
+    These distributions depend on the parameters $\beta$,
+    $\theta$ and $\sigma$.
+
+- The probability model defines the *likelihood* of the
+    parameters, given the observed data, $\mathbf y$.  In theory all we
+    need to know is how to define the likelihood from the data so that
+    we can maximize the likelihood with respect to the parameters.  In
+    practice we want to be able to evaluate it quickly and accurately.
+
+
+
+---
+class: left, top
+
+
+# Properties of $\Sigma_\theta$; generating it
+
+- Because it is a variance-covariance matrix, the $q\times q$ 
+    $\Sigma_\theta$ must be symmetric and *positive semi-definite*, which means, in effect, that it has a "square
+    root" --- there must be another matrix that, when
+    multiplied by its transpose, gives $\Sigma_\theta$.
+
+- We never really form $\Sigma$; we always work with the
+    *relative covariance factor*, $\Lambda$,
+    defined so that
+$$\Sigma_\theta=\sigma^2\Lambda\Lambda^\prime$$
+    where $\sigma^2$ is the same variance parameter as in $(\mathcal Y|\mathcal B=\mathbf b)$.
+
+- We also work with a $q$-dimensional "spherical" or "unit"
+    random-effects vector, $\mathcal U$, such that
+$$\mathcal U\sim\mathcal{N}\left(\mathbf 0,\sigma^2\mathbf I_q\right),\:\mathcal B=\Lambda\mathcal U\Rightarrow
+      \text{Var}(\mathcal B)=\sigma^2\Lambda\Lambda^\prime=\Sigma .$$
+
+- The linear predictor expression becomes
+$$\mathbf Z\mathbf b+\mathbf X\beta=\mathbf Z\Lambda\mathbf u+\mathbf X\beta$$
+
+---
+class: left, top
+
+
+# The conditional mean $\mu_{\mathcal U|\mathcal Y}$
+
+- Although the probability model is defined from $(\mathcal Y|\mathcal U=\mathbf u)$, we observe $\mathbf y$, not $\mathbf u$ (or $\mathbf b$) so we want to work with the other conditional distribution, $(\mathcal U|\mathcal Y=\mathbf y)$.
+
+- The joint distribution of $\mathcal Y$ and $\mathcal U$ is Gaussian with density
+
+$$\begin{aligned}
+        f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)&
+        =f_{\mathcal Y|\mathcal U}(\mathbf y|\mathbf u)\,f_{\mathcal U}(\mathbf u)\\
+        &=\frac{\exp(-\frac{1}{2\sigma^2}\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\|^2)}
+        {(2\pi\sigma^2)^{n/2}}\;
+        \frac{\exp(-\frac{1}{2\sigma^2}\|\mathbf u\|^2)}{(2\pi\sigma^2)^{q/2}}\\
+        &=\frac{\exp(-
+          \left[\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\|^2+\|\mathbf u\|^2\right]/(2\sigma^2))}
+        {(2\pi\sigma^2)^{(n+q)/2}}
+      \end{aligned}$$
+
+- $(\mathcal U|\mathcal Y=\mathbf y)$ is also Gaussian so its mean is its mode. I.e.
+$$\mu_{\mathcal U|\mathcal Y}=\arg\min_{\mathbf u}
+      \left[\left\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\right\|^2 +
+      \left\|\mathbf u\right\|^2\right]$$
+
+---
+class: left, top
+
+
+# Minimizing a penalized sum of squared residuals  
+
+- An expression like $\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\|^2 + \|\mathbf u\|^2$ is called a *penalized sum of squared residuals* because $\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\|^2$ is a sum of squared residuals and
+      $\|\mathbf u\|^2$ is a penalty on the size of the vector $\mathbf u$.
+
+- Determining $\mu_{\mathcal U|\mathcal Y}$ as the minimizer of
+    this expression is a *penalized least squares* (PLS) problem.  In
+    this case it is a *penalized linear least squares problem*
+    that we can solve directly (i.e. without iterating).
+
+- One way to determine the solution is to rephrase it as a
+    linear least squares problem for an extended residual vector
+
+$$\mu_{\mathcal U|\mathcal Y}=\arg\min_{\mathbf u}\left\|
+        \begin{bmatrix}\mathbf y-\mathbf X\beta\\\mathbf 0\end{bmatrix}-
+        \begin{bmatrix}\mathbf Z\Lambda\\\mathbf I_q\end{bmatrix}
+        \mathbf u\right\|^2$$
+    This is sometimes called a *pseudo-data* approach because we
+    create the effect of the penalty term, $\|\mathbf u\|^2$, by adding
+    "pseudo-observations" to $\mathbf y$ and to the predictor.
+
+
+
+---
+class: left, top
+
+
+# Solving the linear PLS problem
+
+- The conditional mean satisfies the equations
+$$\left(\Lambda^\prime\mathbf Z^\prime\mathbf Z\Lambda^\prime+\mathbf I_q\right)
+      \mu_{\mathcal U|\mathcal Y}=\Lambda^\prime\mathbf Z^\prime(\mathbf y-\mathbf X\beta) .$$
+
+- This would be interesting but not very important were it not
+    for the fact that we actually can solve that system for
+    $\mu_{\mathcal U|\mathcal Y}$ even when its dimension, $q$, is
+    very, very large.
+
+- Because $\mathbf Z$ is generated from indicator columns for the
+    grouping factors, it is sparse.  $\mathbf Z\Lambda$ is also very sparse.
+
+- There are sophisticated and efficient ways of calculating a
+    sparse Cholesky factor, which is a sparse, lower-triangular matrix
+    $\mathbf L_\theta$ that satisfies
+
+$$\mathbf L_\theta\mathbf L^\prime_\theta=\Lambda^\prime\mathbf Z^\prime\mathbf Z\Lambda+\mathbf I_q$$
+    and, from that, solving for $\mu_{\mathcal U|\mathcal Y}$.
+
+---
+class: left, top
+
+
+# The sparse Choleksy factor, $\mathbf L_\theta$
+
+- Because the ability to evaluate the sparse Cholesky factor,
+    $\mathbf L_\theta$, is the key to the computational methods in the
+    `lme4` package, we consider this in detail.
+
+- In practice we will evaluate $\mathbf L_\theta$ for many
+    different values of $\theta$ when determining the ML or REML
+    estimates of the parameters.
+
+- As described in Davis (2006), 4.6, the calculation is
+    performed in two steps: in the *symbolic decomposition* we
+    determine the position of the nonzeros in $\mathbf L$ from those in
+    $\mathbf Z\Lambda$ then, in the *numeric decomposition*, we determine
+    the numerical values in those positions.  Although the
+    numeric decomposition may be done dozens, perhaps hundreds
+    of times as we iterate on $\theta$, the symbolic decomposition is
+    only done once.
+
+
+
+---
+class: left, top
+
+
+# A fill-reducing permutation, $\mathbf P$
+
+- In practice it can be important while performing the symbolic
+    decomposition to determine a *fill-reducing permutation*,
+    which is written as a $q\times q$ permutation matrix, $\mathbf P$.
+    This matrix is just a re-ordering of the columns of $\mathbf I_q$ and
+    has an orthogonality property, $\mathbf P\mathbf P^\prime=\mathbf P^\prime\mathbf P=\mathbf I_q$.
+
+- When $\mathbf P$ is used, the factor $\mathbf L_\theta$ is defined
+    to be the sparse, lower-triangular matrix that satisfies
+$$\mathbf L_\theta\mathbf L^\prime_\theta=\mathbf P\left[\Lambda^\prime\mathbf Z^\prime_\theta\mathbf Z\Lambda+\mathbf I_q\right]
+      \mathbf P^\prime$$
+
+- In the `Matrix` package for \R, the `Cholesky`
+    method for a sparse, symmetric matrix (class `dsCMatrix`)
+    performs both the symbolic and numeric decomposition.  By default,
+    it determines a fill-reducing permutation, $\mathbf P$.  The
+    `update` method for a Cholesky factor (class
+    `CHMfactor`) performs the numeric decomposition only.
+
+---
+class: left, top
+
+
+# The conditional density, $f_{\mathcal U|\mathcal Y}$
+
+- We know the joint density, $f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)$, and
+
+$$f_{\mathcal U|\mathcal Y}(\mathbf u|\mathbf y)=\frac{f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)}
+      {\int f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)\,d\mathbf u}$$
+    so we almost have $f_{\mathcal U|\mathcal Y}$. The trick is evaluating
+    the integral in the denominator, which, it turns out, is exactly
+    the likelihood, $L(\theta,\beta,\sigma^2|\mathbf y)$, that we
+    want to maximize.
+
+- The Cholesky factor, $\mathbf L_\theta$ is the
+    key to doing this because
+    
+$$\mathbf P^\prime\mathbf L_\theta\mathbf L^\prime_\theta\mathbf P
+      \mu_{\mathcal U|\mathcal Y}=
+      \Lambda^\prime\mathbf Z^\prime(\mathbf y-\mathbf X\beta) .$$
+    Although the `Matrix` package provides a one-step
+    `solve` method for this, we write it in stages:
+    1 Solve $\mathbf L\mathbf c_{\mathbf u}=\mathbf P\Lambda^\prime\mathbf Z^\prime(\mathbf y-\mathbf X\beta)$ for $\mathbf c_{\mathbf u}$.
+    1 Solve $\mathbf L^\prime\mathbf P\mu=\mathbf c_{\mathbf u}$ for $\mathbf P\mu_{\mathcal U|\mathcal Y}$ and $\mu_{\mathcal U|\mathcal Y}$ as $\mathbf P^\prime\mathbf P\mu_{\mathcal U|\mathcal Y}$.
+
+
+---
+class: left, top
+
+
+# Evaluating the likelihood
+
+- The exponent of $f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)$ can now be written
+
+$$\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\|^2+\|\mathbf u\|^2=
+      r^2(\theta,\beta)+
+      \|\mathbf L^\prime\mathbf P(\mathbf u-\mu_{\mathcal U|\mathcal Y})\|^2.$$
+    where $r^2(\theta,\beta)=\|\mathbf y-\mathbf X\beta-\mathbf U\mu_{\mathcal U|\mathcal Y}\|^2+\|\mu_{\mathcal U|\mathcal Y}\|^2$.  The first term doesn't depend on $\mathbf u$ and the second is relatively easy to integrate.
+
+- Use the change of variable $\mathbf v=\mathbf L^\prime\mathbf P(\mathbf u-\mu_{\mathcal U|\mathcal Y})$, with
+$d\mathbf v=\mathrm{abs}(|\mathbf L||\mathbf P|)\,d\mathbf u$, in
+
+$$\int\frac{\exp\left(\frac{-\|\mathbf L^\prime\mathbf P(\mathbf u-\mu_{\mathcal U|\mathcal Y})\|^2}
+          {2\sigma^2}\right)}
+      {(2\pi\sigma^2)^{q/2}}\,d\mathbf u
+      = \int\frac{\exp\left(\frac{-\|\mathbf v\|^2}{2\sigma^2}\right)}{(2\pi\sigma^2)^{q/2}}\,\frac{d\mathbf
+        v}{\mathrm{abs}(|\mathbf L||\mathbf P|)} = \frac{1}{\mathrm{abs}(|\mathbf L||\mathbf
+        P|)}=\frac{1}{|\mathbf L|}$$
+
+because $\mathrm{abs}|\mathbf P|=1$ and $\mathrm{abs}|\mathbf L|$, which is the product of its diagonal elements, all of which are positive, is positive.
+
+
+---
+class: left, top
+
+
+# Evaluating the likelihood (cont'd)
+
+- As is often the case, it is easiest to write the
+    log-likelihood.  On the deviance scale (negative twice the
+    log-likelihood) $\ell(\theta,\beta,\sigma|\mathbf y)=\log L(\theta,\beta,\sigma|\mathbf y)$ becomes
+
+$$-2\ell(\theta,\beta,\sigma|\mathbf y)=n\log(2\pi\sigma^2)+\frac{r^2(\theta,\beta)}{\sigma^2}+\log(|\mathbf L_\theta|^2)$$
+
+- We wish to minimize the deviance.  Its dependence on $\sigma$
+    is straightforward.  Given values of the other parameters, we can
+    evaluate the conditional estimate
+$$\widehat{\sigma^2}(\theta,\beta)=\frac{r^2(\theta,\beta)}{n}$$
+    producing the *profiled deviance*
+$$-2\tilde{\ell}(\theta,\beta|\mathbf y)=\log(|\mathbf L_\theta|^2)+
+      n\left[1+\log\left(\frac{2\pi r^2(\theta,\beta)}{n}\right)\right]$$
+
+- However, an even greater simplification is possible because
+    the deviance depends on $\beta$ only through
+    $r^2(\theta,\beta)$.
+
+
+---
+class: left, top
+
+
+# Profiling the deviance with respect to $\beta$
+
+- Because the deviance depends on $\beta$ only through
+    $r^2(\theta,\beta)$ we can obtain the conditional estimate,
+    $\widehat{\beta}_\theta$, by extending the PLS problem to
+
+$$r^2_\theta=\min_{\mathbf u,\beta}
+      \left[\left\|\mathbf y-\mathbf X\beta-\mathbf Z\Lambda\mathbf u\right\|^2 +
+      \left\|\mathbf u\right\|^2\right]$$
+      
+with the solution satisfying the equations
+    
+$$\begin{bmatrix}
+        \Lambda^\prime\mathbf Z^\prime\mathbf Z\Lambda+\mathbf I_q & \mathbf U_\theta^\prime\mathbf X\\
+        \mathbf X^\prime\mathbf Z\Lambda & \mathbf X^\prime\mathbf X
+      \end{bmatrix}
+      \begin{bmatrix}
+        \mu_{\mathcal U|\mathcal Y}\\\widehat{\beta}_\theta
+      \end{bmatrix}=
+      \begin{bmatrix}\Lambda^\prime\mathbf Z^\prime\mathbf y\\\mathbf X^\prime\mathbf y .
+      \end{bmatrix}$$
+
+- The profiled deviance, which is a function of $\theta$
+    only, is
+
+$$-2\tilde{\ell}(\theta)=\log(|\mathbf L_\theta|^2)+n\left[1+\log\left(\frac{2\pi r^2_\theta}{n}\right)\right]$$
+
+
+---
+class: left, top
+
+
+# Solving the extended PLS problem
+
+- For brevity we will no longer show the dependence of matrices
+    and vectors on the parameter $\theta$.
+- As before we use the sparse Cholesky decomposition, with $\bm
+    L$ and $\mathbf P$ satisfying 
+$\mathbf L\mathbf L^\prime=\mathbf P(\Lambda^\prime\mathbf Z^\prime\mathbf Z\Lambda+\mathbf I)$ and $\mathbf c_{\mathbf u}$, the solution to $\mathbf L\mathbf c_{\mathbf u}=\mathbf P\Lambda^\prime\mathbf Z^\prime\mathbf y$.
+- We extend the decomposition with the $q\times p$ matrix $\mathbf R_{ZX}$, the upper triangular $p\times p$ matrix $\mathbf R_X$, and
+    the $p$-vector $\mathbf c_{\beta}$ satisfying
+    
+$$\begin{align*}
+      \mathbf L\mathbf R_{ZX}&=\mathbf P\Lambda^\prime\mathbf Z^\prime\mathbf X\\
+      \mathbf R_X^\prime\mathbf R_X&=\mathbf X^\prime\mathbf X-\mathbf R_{ZX}^\prime\mathbf R_{ZX}\\
+      \mathbf R_X^\prime\mathbf c_{\beta}&=\mathbf X^\prime\mathbf y-\mathbf R_{ZX}^\prime\mathbf c_{\mathbf u}
+    \end{align*}$$
+so that
+
+$$\begin{bmatrix}
+        \mathbf P^\prime\mathbf L& \mathbf 0\\
+        \mathbf R_{ZX}^\prime & \mathbf R_X^\prime
+      \end{bmatrix}
+      \begin{bmatrix}
+        \mathbf L^\prime\mathbf P & \mathbf R_{ZX}\\
+        \mathbf 0            & \mathbf R_X
+      \end{bmatrix}=
+      \begin{bmatrix}
+        \Lambda^\prime\mathbf Z^\prime\mathbf Z\Lambda+\mathbf I & \Lambda^\prime\mathbf Z^\prime\mathbf X\\
+        \mathbf X^\prime\mathbf Z\Lambda       & \mathbf X^\prime\mathbf X
+      \end{bmatrix} .$$
+
+---
+class: left, top
+
+
+# Solving the extended PLS problem (cont'd)
+
+- Finally we solve
+$$\begin{align*}
+      \mathbf R_X\widehat{\beta}_\theta&=\mathbf c_{\beta}\\
+      \mathbf L^\prime\mathbf P\mu_{\mathcal U|\mathcal Y}&=\mathbf c_{\mathbf u}-\mathbf R_{ZX}\widehat{\beta}_\theta
+    \end{align*}$$
+- The profiled REML criterion also can be expressed simply.
+    The criterion is
+$$L_R(\theta,\sigma^2|\mathbf y)=\int L(\theta,\beta,\sigma^2|\mathbf y)\,d\beta$$
+    The same change-of-variable technique for evaluating
+    the integral w.r.t. $\mathbf u$ as $1/\mathrm{abs}(|\mathbf L|)$ produces 
+    $1/\mathrm{abs}(|\mathbf R_X|)$ here and removes
+    $(2\pi\sigma^2)^{p/2}$ from the denominator.  On the deviance
+    scale, the profiled REML criterion is
+$$-2\tilde{\ell}_R(\theta)=\log(|\mathbf L|^2)+\log(|\mathbf R_x|^2)+(n-p)\left[1+\log\left(\frac{2\pi r^2_\theta}{n-p}\right)\right]$$
+- These calculations can be expressed in a few lines of **R** code.
+
+
+---
+class: left, top
+
+#Summary
+
+- For a linear mixed model, even one with a huge number of
+    observations and random effects like the model for the grade point
+    scores, evaluation of the ML or REML profiled deviance, given a
+    value of $\theta$, is straightforward.  It involves updating
+    $\Lambda$, $\mathbf L_\theta$, $\mathbf R_{ZX}$, $\mathbf R_{X}$,
+    calculating the penalized residual sum of squares,
+    $r^2_\theta$ and two determinants of triangular matrices.
+
+- The profiled deviance can be optimized as a function of
+    $\theta$ only.  The dimension of $\theta$ is usually very
+    small.  For the grade point scores there are only three components
+    to $\theta$.
+
+
+
