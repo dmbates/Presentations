@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Recent Computational Advances for Mixed-effects Modeling</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Douglas Bates" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Recent Computational Advances for Mixed-effects Modeling
+### Douglas Bates
+### 2018-09-25 (updated: 2018-09-25)
+
+---
+
+class: left, top
+
+
+## A brief history of lme4
+
+- I got into the field of fitting mixed-effects models almost by accident.
+
+- Mary Lindstrom was interested in combining mixed-effects and nonlinear regression for some data she encountered in a consulting lab.
+
+- She convinced me that I should learn about M-E models so that I could be her thesis advisor.
+
+- We needed to think about methods for fitting linear mixed-effects models to be able to create iterative methods for nonlinear mixed-effects models.
+
+- Later Jose Pinheiro was doing a thesis with me and refined the computation methods.  Together we wrote an S package for *n*on*l*inear *m*ixed-*e*ffects models and a book describing the theory and practice.
+
+- By the time that book was published I was primarily working in **R**.  With Saikat Debroy I converted the **S** package, *nlme*, to an **R** package.
+
+- As often happens to me, as soon as I finish a project, I want to start from scratch on a new version.
+
+---
+class: left, top
+
+## The ETH-Z connection
+
+- I was interested in S4 classes and methods and had heard about sparse matrix methods being used on some models like this.
+
+- I knew it would be a challenge for me to incorporate code like [`SuiteSparse`](http://faculty.cse.tamu.edu/davis/suitesparse.html) into R and enlisted Martin Maechler's help.
+
+- We started work on the `lme4` package around 2000.  Initially it incorportated both the modeling code and the sparse matrices, etc. Eventually we split off the code for dense and sparse matrices using S4 classes into the `Matrix` package.
+
+- We were still using the formulation of the model from `nlme`, more or less, but there were troublesome examples related to convergence.
+
+- By 2004 Saikat Debroy and I had reformulated the key step in evaluating the log-likelihood as a *penalized least squares* problem as opposed to *generalized least squares*
+
+- At the time we used a precision factor to define the model.  Later I changed the formulation to use a relative covariance factor, which allows for evaluation of the log-likelihood when a variance component goes to zero.
+
+---
+class: left, top
+
+## lme4 on CRAN
+
+- First uploaded in 2003 - continues to be updated but mostly by Ben Bolker
+
+- At various times we incorporated `Rcpp` to use `C++` code, and wrote `RcppEigen` for linear algebra in `C++`
+
+- We also added fitting of Generalized Linear Mixed Models
+
+- The '4' in the name refers to 'S4' classes and methods.  At present it uses S3 classes, S4 classes, C++ classes and templates, reference classes, S6 (maybe) all in an attempt to keep the code modular and maintainable.  It would be misleading to say that this was successful.
+
+- Despite claims of a "seamless" interface between `R` and `C++`, such interfaces between dynamically-typed and statically-typed languages are always difficult.
+
+---
+class: left, top
+
+## Yet another "start from scratch"
+
+- Around December of 2011 I read a posting about a language for technical computing that used the LLVM compiler technology for "Just In Time" compilation. (https://julialang.org)
+
+- The objective is to achieve speeds within a factor of 2 of compiled (i.e. C, C++, Fortran) code in a high-level, dynamic language.
+
+- Whole design is based on generic functions (as in `R`) and "multiple dispatch" (as in `S4`) to methods. 
+
+- I started to follow development of this `Julia` language and participated in early development of core capabilities, particularly for linear algebra.
+
+- For natural or for programming languages, it is painful to start with a new one because you need to learn new vocabulary and new constructions.
+
+- It is frustrating to try to work with a language that is changing all the time. Julia just reached (August 8, 2018) a stable v1.0.0 release (R v1.0.0 was Feb. 29, 2000)
+
+- The infrastructure for categorical data, dataframes, other tabular representations, missing data representation, formula representation and, more importantly, graphics is still being developed.  These things all take time and effort.
+
+- Nevertheless, for me it has been a good experience because of the expressiveness of the language, speed, flexibility, etc.
+
+---
+class: left, top
+
+## Mixed-effects models
+
+- We will compare the `lme4` package for `R` and the `MixedModels` package (https://pkg.julialang.org) for Julia on fitting **mixed-effects models**.
+
+- Mixed-effects models, like many statistical models, describe the relationship between a *response* variable and one or more *covariates* recorded with it.
+
+- A linear mixed-effects model is based on a *linear predictor* expression incorporating *coefficients* that are estimated from the observed data.
+
+- Coefficients associated with the levels of a categorical covariate are sometimes called the *effects* of the levels.
+
+- When the levels of a covariate are fixed and reproducible (e.g. a covariate `sex` that has levels `male` and `female`) or an experimental condition (`primed` or `unprimed`) we incorporate them as **fixed-effects parameters**.
+
+- When the levels of a covariate correspond to the particular observational or experimental units in the experiment we incorporate them as **random effects**.  In experimental design we refer to them as *blocking factors*. Almost always "Subject" is a blocking factor.  When subjects are exposed to a common set of items, "Item" is also usually a blocking factor.
+
+---
+class: left, top
+
+## Motivating example
+
+- The `InstEval` data in the `lme4` package contains (anonymized) instructor evaluations by ETH-Z students.
+
+```r
+&gt; str(InstEval)
+```
+
+```
+'data.frame':	73421 obs. of  7 variables:
+ $ s      : Factor w/ 2972 levels "1","2","3","4",..: 1 1 1 1 2 2 3 3 3 3 ...
+ $ d      : Factor w/ 1128 levels "1","6","7","8",..: 525 560 832 1068 62 406 3 6 19 7..
+ $ studage: Ord.factor w/ 4 levels "2"&lt;"4"&lt;"6"&lt;"8": 1 1 1 1 1 1 1 1 1 1 ...
+ $ lectage: Ord.factor w/ 6 levels "1"&lt;"2"&lt;"3"&lt;"4"&lt;..: 2 1 2 2 1 1 1 1 1 1 ...
+ $ service: Factor w/ 2 levels "0","1": 1 2 1 2 1 1 2 1 1 1 ...
+ $ dept   : Factor w/ 14 levels "15","5","10",..: 14 5 14 12 2 2 13 3 3 3 ...
+ $ y      : int  5 2 5 3 2 4 4 5 5 4 ...
+```
+
+- In the original analysis it was felt to be important to use fixed-effects for the instructor and random-effects for the student but we will use random-effects for both.
+
+
+```r
+&gt; system.time(fm1 &lt;- lmer(y ~ 0 + dept * service + (1|s) + (1|d), InstEval, REML=FALSE, 
++                         control=lmerControl(optimizer="bobyqa", calc.derivs=FALSE)))
+```
+
+```
+   user  system elapsed 
+  6.346   0.068   4.680 
+```
+
+
+---
+class: left, top
+
+
+```r
+&gt; fm1
+```
+
+```
+Linear mixed model fit by maximum likelihood  ['lmerMod']
+Formula: y ~ 0 + dept * service + (1 | s) + (1 | d)
+   Data: InstEval
+      AIC       BIC    logLik  deviance  df.resid 
+ 237647.6  237932.9 -118792.8  237585.6     73390 
+Random effects:
+ Groups   Name        Std.Dev.
+ s        (Intercept) 0.3247  
+ d        (Intercept) 0.5083  
+ Residual             1.1767  
+Number of obs: 73421, groups:  s, 2972; d, 1128
+Fixed Effects:
+         dept15            dept5           dept10           dept12            dept6  
+        3.22961          3.35915          3.05286          3.28132          3.26434  
+          dept7            dept4            dept8            dept9           dept14  
+        3.37555          3.38130          3.33381          3.27365          3.28136  
+          dept1            dept3           dept11            dept2         service1  
+        3.27628          3.28596          3.28926          3.23517          0.25202  
+ dept5:service1  dept10:service1  dept12:service1   dept6:service1   dept7:service1  
+       -0.18076          0.01865         -0.28227         -0.49446         -0.39205  
+ dept4:service1   dept8:service1   dept9:service1  dept14:service1   dept1:service1  
+       -0.27855         -0.18953         -0.49987         -0.49716         -0.24042  
+ dept3:service1  dept11:service1   dept2:service1  
+       -0.22301         -0.51700         -0.38477  
+```
+
+---
+class: left, top
+
+## Model definition
+
+- We define a linear mixed model as two random variables: the `\(n\)`-dimensional `\(\mathcal Y\)` and the
+    `\(q\)`-dimensional `\(\mathcal B\)`
+    
+- The probability model specifies the conditional distribution
+`$$\left(\mathcal Y|\mathcal B=\mathbf b\right)\sim\mathcal{N}\left(\mathbf Z\mathbf b+\mathbf X\beta,\sigma^2\mathbf I_n\right)$$`
+    and the unconditional distribution
+`$$\mathcal B\sim\mathcal{N}\left(\mathbf 0,\Sigma_\theta\right) .$$`
+    These distributions depend on the parameters `\(\beta\)`, `\(\theta\)` and `\(\sigma\)`.
+
+- As a variance-covariance matrix, the `\(q\times q\)` `\(\Sigma_\theta\)` must be symmetric and positive semi-definite.  In practice we use the lower-triangular
+    *relative covariance factor*, `\(\Lambda\)`, defined so that
+`$$\Sigma_\theta=\sigma^2\Lambda_\theta\Lambda_\theta^\prime$$`
+    where `\(\sigma\)` is the same scale parameter used in `\((\mathcal Y|\mathcal B=\mathbf b)\)`.
+
+---
+class: left, top
+
+## Conversion to a penalized least squares problem
+
+- Consider a `\(q\)`-dimensional "spherical" or "unit" random-effects vector, `\(\mathcal U\)`, such that
+`$$\mathcal U\sim\mathcal{N}\left(\mathbf 0,\sigma^2\mathbf I_q\right),\:\mathcal B=\Lambda_\theta\mathcal U\Rightarrow\text{Var}(\mathcal B)=\sigma^2\Lambda_\theta\Lambda_\theta^\prime=\Sigma .$$`
+
+- The linear predictor expression becomes
+`$$\mathbf Z\mathbf b+\mathbf X\beta=\mathbf Z\Lambda_\theta\mathbf u+\mathbf X\beta$$`
+
+- Although the probability model is defined from `\((\mathcal Y|\mathcal U=\mathbf u)\)`, we observe `\(\mathbf y\)`, not `\(\mathbf u\)` (or `\(\mathbf b\)`) so we want to work with the other conditional distribution, `\((\mathcal U|\mathcal Y=\mathbf y)\)`.
+
+- The joint distribution of `\(\mathcal Y\)` and `\(\mathcal U\)` is Gaussian with density
+
+`$$\begin{aligned}
+        f_{\mathcal Y,\mathcal U}(\mathbf y,\mathbf u)&amp;
+        =f_{\mathcal Y|\mathcal U}(\mathbf y|\mathbf u)\,f_{\mathcal U}(\mathbf u)\\
+        &amp;=\frac{\exp(-\frac{1}{2\sigma^2}\|\mathbf y-\mathbf Z\Lambda_\theta\mathbf u-\mathbf X\beta\|^2)}
+        {(2\pi\sigma^2)^{n/2}}\;
+        \frac{\exp(-\frac{1}{2\sigma^2}\|\mathbf u\|^2)}{(2\pi\sigma^2)^{q/2}}\\
+        &amp;=\frac{\exp(-
+          \left[\|\mathbf y-\mathbf Z\Lambda_\theta\mathbf u-\mathbf X\beta\|^2+\|\mathbf u\|^2\right]/(2\sigma^2))}
+        {(2\pi\sigma^2)^{(n+q)/2}}
+      \end{aligned}$$`
+
+- `\((\mathcal U|\mathcal Y=\mathbf y)\)` is also Gaussian so its mean is its mode, `\(\mu_{\mathcal U|\mathcal Y}=\arg\min_{\mathbf u}\left[\left\|\mathbf y-\mathbf Z\Lambda_\theta\mathbf u-\mathbf X\beta\right\|^2 + \left\|\mathbf u\right\|^2\right]\)`
+
+---
+class: left, top
+
+
+## Minimizing a penalized sum of squared residuals  
+
+- An expression like `\(\|\mathbf y-\mathbf Z\Lambda_\theta\mathbf u-\mathbf X\beta\|^2 + \|\mathbf u\|^2\)` is called a
+*penalized sum of squared residuals* because `\(\|\mathbf y-\mathbf Z\Lambda_\theta\mathbf u-\mathbf X\beta\|^2\)` is a sum of squared residuals and
+`\(\|\mathbf u\|^2\)` is a penalty on the size of the vector `\(\mathbf u\)`.
+
+- Determining `\(\mu_{\mathcal U|\mathcal Y}\)` as the minimizer of
+    this expression is a *penalized least squares* (PLS) problem.  In
+    this case it is a *penalized linear least squares problem*
+    that we can solve directly (i.e. without iterating).
+
+- One way to determine the solution is to rephrase it as a linear least squares problem for an extended residual vector
+
+`$$\mu_{\mathcal U|\mathcal Y}=\arg\min_{\mathbf u}\left\|
+        \begin{bmatrix}\mathbf y-\mathbf X\beta\\\mathbf 0\end{bmatrix}-
+        \begin{bmatrix}\mathbf Z\Lambda_\theta\\\mathbf I_q\end{bmatrix}
+        \mathbf u\right\|^2$$`
+- We can extend this to also obtain the conditional estimate of `\(\beta\)`
+
+`$$\mu_{\mathcal U|\mathcal Y},\hat\beta_\theta=\arg\min_{\mathbf u,\beta}\left\|
+        \begin{bmatrix}\mathbf y\\\mathbf 0\end{bmatrix}-
+        \begin{bmatrix}\mathbf Z\Lambda_\theta&amp;\mathbf X\\\mathbf I_q&amp;\mathbf 0\end{bmatrix}
+        \begin{bmatrix}\mathbf u\\\beta\end{bmatrix}\right\|^2$$`
+from which we can derive a *profiled log-likelihood*, a function of `\(\theta\)` and `\(\sigma\)` only.
+
+- The conditional estimate of `\(\sigma\)` also has a closed-form solution, providing a profiled log-likelihood as a function of `\(\theta\)` only.
+
+---
+class: left, top
+
+## Profiled log-likelihood
+
+- On the deviance scale (negative twice the log-likelihood)
+
+`$$\tilde{d}(\theta|{\mathbf y})=d(\theta,\widehat{\beta}_\theta,\widehat{\sigma}_\theta|{\mathbf y})
+=\log(|\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta+\mathbf I|)+n\left[1+\log\left(\frac{2\pi r^2_\theta}{n}\right)\right],$$`
+    where 
+`$$r^2_\theta=\min_{\mathbf u,\beta}\left\|
+        \begin{bmatrix}\mathbf y\\\mathbf 0\end{bmatrix}-
+        \begin{bmatrix}\mathbf Z\Lambda_\theta&amp;\mathbf X\beta\\\mathbf I_q&amp;\mathbf 0\end{bmatrix}
+        \begin{bmatrix}\mathbf u\\\beta\end{bmatrix}\right\|^2$$`
+
+
+---
+class: left, top
+
+
+## Solving the PLS problem with the Cholesky factor
+
+- The conditional mean satisfies the equations
+`$$\left(\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta^\prime+\mathbf I_q\right)
+      \mu_{\mathcal U|\mathcal Y}=\Lambda_\theta^\prime\mathbf Z^\prime(\mathbf y-\mathbf X\beta) .$$`
+
+- This would be interesting but not very important were it not
+    for the fact that we actually can solve that system for
+    `\(\mu_{\mathcal U|\mathcal Y}\)` even when its dimension, `\(q\)`, is
+    very, very large.
+
+- Because `\(\mathbf Z\)` is generated from indicator columns for the
+    grouping factors, it is sparse.  `\(\mathbf Z\Lambda_\theta\)` is also very sparse.
+
+- There are sophisticated and efficient ways of calculating a
+    sparse Cholesky factor, which is a sparse, lower-triangular matrix
+    `\(\mathbf L_\theta\)` that satisfies
+`$$\mathbf L_\theta\mathbf L^\prime_\theta=\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta+\mathbf I_q$$`
+and, from that, solving for `\(\mu_{\mathcal U|\mathcal Y}\)`.
+
+- Also, the determinant, `\(|\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta+\mathbf I_q|=|\mathbf L_\theta|^2\)`, which is easy to calculate when `\(\mathbf L_\theta\)` is triangular. 
+
+---
+class: left, top
+
+## Two approaches to solving the PLS problem
+
+- In `lme4` we used the CHOLMOD code to solve for `\(\mu_{\mathcal U|\mathcal Y}\)` followed by some CHOLMOD and LAPACK code to solve for `\(\hat{\beta}_\theta\)`, then used these to evaluate the residual and eventually the penalized sum of squared residuals.
+
+- It took me a long time to realize that it is not necessary to do evaluate the PLS solution and the residuals, etc. if the lower Cholesky factor of
+
+`$$\begin{bmatrix}
+\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta+\mathbf I_q &amp; \Lambda_\theta^\prime\mathbf Z^\prime\mathbf X &amp; \Lambda_\theta^\prime\mathbf Z^\prime\mathbf y\\
+\mathbf X^\prime\mathbf Z\Lambda_\theta &amp; \mathbf X^\prime\mathbf X &amp; \mathbf X^\prime\mathbf y\\
+\mathbf y^\prime\mathbf Z\Lambda_\theta &amp; \mathbf y^\prime\mathbf X &amp; \mathbf y^\prime\mathbf y\end{bmatrix}$$`
+
+is written as
+`$$\begin{bmatrix}\mathbf L_\mathbf{ZZ}&amp;\mathbf 0&amp;\mathbf 0\\
+\mathbf L_\mathbf{XZ}&amp;\mathbf L_\mathbf{XX}&amp;\mathbf 0\\
+\mathbf L_\mathbf{yZ}&amp;\mathbf L_\mathbf{yX}&amp;\mathbf L_\mathbf{yy}\end{bmatrix}$$`
+
+then `\(\mathbf L_\mathbf{yy}\)`, which is a `\(1\times 1\)` matrix, is `\(\sqrt{r^2_\theta}\)` and `\(|\mathbf L_\mathbf{ZZ}|^2 = |\Lambda_\theta^\prime\mathbf Z^\prime\mathbf Z\Lambda_\theta+\mathbf I_q|\)`
+
+---
+class: left, top
+
+## Sparse matrix vs Blocked Matrix
+
+- To use the blocked matrix approach effectively, the `\(\mathbf Z\)` and `\(\Lambda_\theta\)` matrices should also be blocked according to random-effects terms (well, grouping factors actually)
+
+- This is the approach in the MixedModels package
+
+- Julia passes arrays by reference, which means that the contents of an argument can be altered within a function.
+
+- This can, of course, cause problems if one is not careful.  However, it also allows for *in-place* updates.
+
+- When Julia code needs to be tuned, there are good profiling and allocation tracking tools to use.
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script>
+(function() {
+  var i, text, code, codes = document.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+})();
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
