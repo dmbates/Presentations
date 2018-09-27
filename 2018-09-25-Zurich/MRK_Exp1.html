@@ -1,570 +1,570 @@
 <!DOCTYPE html>
-<HTML lang = "en">
-<HEAD>
-  <meta charset="UTF-8"/>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  
-  
+  <meta name="author" content="Douglas Bates, Maximillian Rabe &amp; Reinhold Kliegl">
+  <meta name="dcterms.date" content="2018-09-28">
+  <title>Re-analysis of data from Masson, Rabe and Kliegl (2017)</title>
 
-  <script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-      tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
-      TeX: { equationNumbers: { autoNumber: "AMS" } }
-    });
-  </script>
+<!-- TODO check if math works with plotly  -->
+<!-- Need to load plotly before Mathjax or pandoc equations don't work -->
 
-  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
+
 
   <style type="text/css">
   @font-face {
-  font-style: normal;
-  font-weight: 300;
-}
-@font-face {
-  font-style: normal;
-  font-weight: 400;
-}
-@font-face {
-  font-style: normal;
-  font-weight: 600;
-}
-html {
-  font-family: sans-serif; /* 1 */
-  -ms-text-size-adjust: 100%; /* 2 */
-  -webkit-text-size-adjust: 100%; /* 2 */
-}
-body {
-  margin: 0;
-}
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-main,
-menu,
-nav,
-section,
-summary {
-  display: block;
-}
-audio,
-canvas,
-progress,
-video {
-  display: inline-block; /* 1 */
-  vertical-align: baseline; /* 2 */
-}
-audio:not([controls]) {
-  display: none;
-  height: 0;
-}
-[hidden],
-template {
-  display: none;
-}
-a:active,
-a:hover {
-  outline: 0;
-}
-abbr[title] {
-  border-bottom: 1px dotted;
-}
-b,
-strong {
-  font-weight: bold;
-}
-dfn {
-  font-style: italic;
-}
-h1 {
-  font-size: 2em;
-  margin: 0.67em 0;
-}
-mark {
-  background: #ff0;
-  color: #000;
-}
-small {
-  font-size: 80%;
-}
-sub,
-sup {
-  font-size: 75%;
-  line-height: 0;
-  position: relative;
-  vertical-align: baseline;
-}
-sup {
-  top: -0.5em;
-}
-sub {
-  bottom: -0.25em;
-}
-img {
-  border: 0;
-}
-svg:not(:root) {
-  overflow: hidden;
-}
-figure {
-  margin: 1em 40px;
-}
-hr {
-  -moz-box-sizing: content-box;
-  box-sizing: content-box;
-  height: 0;
-}
-pre {
-  overflow: auto;
-}
-code,
-kbd,
-pre,
-samp {
-  font-family: monospace, monospace;
-  font-size: 1em;
-}
-button,
-input,
-optgroup,
-select,
-textarea {
-  color: inherit; /* 1 */
-  font: inherit; /* 2 */
-  margin: 0; /* 3 */
-}
-button {
-  overflow: visible;
-}
-button,
-select {
-  text-transform: none;
-}
-button,
-html input[type="button"], /* 1 */
-input[type="reset"],
-input[type="submit"] {
-  -webkit-appearance: button; /* 2 */
-  cursor: pointer; /* 3 */
-}
-button[disabled],
-html input[disabled] {
-  cursor: default;
-}
-button::-moz-focus-inner,
-input::-moz-focus-inner {
-  border: 0;
-  padding: 0;
-}
-input {
-  line-height: normal;
-}
-input[type="checkbox"],
-input[type="radio"] {
-  box-sizing: border-box; /* 1 */
-  padding: 0; /* 2 */
-}
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  height: auto;
-}
-input[type="search"] {
-  -webkit-appearance: textfield; /* 1 */
-  -moz-box-sizing: content-box;
-  -webkit-box-sizing: content-box; /* 2 */
-  box-sizing: content-box;
-}
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-decoration {
-  -webkit-appearance: none;
-}
-fieldset {
-  border: 1px solid #c0c0c0;
-  margin: 0 2px;
-  padding: 0.35em 0.625em 0.75em;
-}
-legend {
-  border: 0; /* 1 */
-  padding: 0; /* 2 */
-}
-textarea {
-  overflow: auto;
-}
-optgroup {
-  font-weight: bold;
-}
-table {
-  font-family: monospace, monospace;
-  font-size : 0.8em;
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-td,
-th {
-  padding: 0;
-}
-thead th {
-    border-bottom: 1px solid black;
-    background-color: white;
-}
-tr:nth-child(odd){
-  background-color: rgb(248,248,248);
-}
-
-
-/*
-* Skeleton V2.0.4
-* Copyright 2014, Dave Gamache
-* www.getskeleton.com
-* Free to use under the MIT license.
-* http://www.opensource.org/licenses/mit-license.php
-* 12/29/2014
-*/
-.container {
-  position: relative;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 20px;
-  box-sizing: border-box; }
-.column,
-.columns {
-  width: 100%;
-  float: left;
-  box-sizing: border-box; }
-@media (min-width: 400px) {
+    font-style: normal;
+    font-weight: 300;
+  }
+  @font-face {
+    font-style: normal;
+    font-weight: 400;
+  }
+  @font-face {
+    font-style: normal;
+    font-weight: 600;
+  }
+  html {
+    font-family: sans-serif; /* 1 */
+    -ms-text-size-adjust: 100%; /* 2 */
+    -webkit-text-size-adjust: 100%; /* 2 */
+  }
+  body {
+    margin: 0;
+  }
+  article,
+  aside,
+  details,
+  figcaption,
+  figure,
+  footer,
+  header,
+  hgroup,
+  main,
+  menu,
+  nav,
+  section,
+  summary {
+    display: block;
+  }
+  audio,
+  canvas,
+  progress,
+  video {
+    display: inline-block; /* 1 */
+    vertical-align: baseline; /* 2 */
+  }
+  audio:not([controls]) {
+    display: none;
+    height: 0;
+  }
+  [hidden],
+  template {
+    display: none;
+  }
+  a:active,
+  a:hover {
+    outline: 0;
+  }
+  abbr[title] {
+    border-bottom: 1px dotted;
+  }
+  b,
+  strong {
+    font-weight: bold;
+  }
+  dfn {
+    font-style: italic;
+  }
+  h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+  }
+  mark {
+    background: #ff0;
+    color: #000;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub,
+  sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sup {
+    top: -0.5em;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  img {
+    border: 0;
+  }
+  svg:not(:root) {
+    overflow: hidden;
+  }
+  figure {
+    margin: 1em 40px;
+  }
+  hr {
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+    height: 0;
+  }
+  pre {
+    overflow: auto;
+  }
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: monospace, monospace;
+    font-size: 1em;
+  }
+  button,
+  input,
+  optgroup,
+  select,
+  textarea {
+    color: inherit; /* 1 */
+    font: inherit; /* 2 */
+    margin: 0; /* 3 */
+  }
+  button {
+    overflow: visible;
+  }
+  button,
+  select {
+    text-transform: none;
+  }
+  button,
+  html input[type="button"], /* 1 */
+  input[type="reset"],
+  input[type="submit"] {
+    -webkit-appearance: button; /* 2 */
+    cursor: pointer; /* 3 */
+  }
+  button[disabled],
+  html input[disabled] {
+    cursor: default;
+  }
+  button::-moz-focus-inner,
+  input::-moz-focus-inner {
+    border: 0;
+    padding: 0;
+  }
+  input {
+    line-height: normal;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    box-sizing: border-box; /* 1 */
+    padding: 0; /* 2 */
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    height: auto;
+  }
+  input[type="search"] {
+    -webkit-appearance: textfield; /* 1 */
+    -moz-box-sizing: content-box;
+    -webkit-box-sizing: content-box; /* 2 */
+    box-sizing: content-box;
+  }
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  fieldset {
+    border: 1px solid #c0c0c0;
+    margin: 0 2px;
+    padding: 0.35em 0.625em 0.75em;
+  }
+  legend {
+    border: 0; /* 1 */
+    padding: 0; /* 2 */
+  }
+  textarea {
+    overflow: auto;
+  }
+  optgroup {
+    font-weight: bold;
+  }
+  table {
+    font-family: monospace, monospace;
+    font-size : 0.8em;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  td,
+  th {
+    padding: 0;
+  }
+  thead th {
+      border-bottom: 1px solid black;
+      background-color: white;
+  }
+  tr:nth-child(odd){
+    background-color: rgb(248,248,248);
+  }
+  
+  /*
+  * Skeleton V2.0.4
+  * Copyright 2014, Dave Gamache
+  * www.getskeleton.com
+  * Free to use under the MIT license.
+  * http://www.opensource.org/licenses/mit-license.php
+  * 12/29/2014
+  */
   .container {
-    width: 85%;
-    padding: 0; }
-}
-@media (min-width: 550px) {
-  .container {
-    width: 80%; }
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box; }
   .column,
   .columns {
-    margin-left: 4%; }
-  .column:first-child,
-  .columns:first-child {
-    margin-left: 0; }
-
-  .one.column,
-  .one.columns                    { width: 4.66666666667%; }
-  .two.columns                    { width: 13.3333333333%; }
-  .three.columns                  { width: 22%;            }
-  .four.columns                   { width: 30.6666666667%; }
-  .five.columns                   { width: 39.3333333333%; }
-  .six.columns                    { width: 48%;            }
-  .seven.columns                  { width: 56.6666666667%; }
-  .eight.columns                  { width: 65.3333333333%; }
-  .nine.columns                   { width: 74.0%;          }
-  .ten.columns                    { width: 82.6666666667%; }
-  .eleven.columns                 { width: 91.3333333333%; }
-  .twelve.columns                 { width: 100%; margin-left: 0; }
-
-  .one-third.column               { width: 30.6666666667%; }
-  .two-thirds.column              { width: 65.3333333333%; }
-
-  .one-half.column                { width: 48%; }
-
-  /* Offsets */
-  .offset-by-one.column,
-  .offset-by-one.columns          { margin-left: 8.66666666667%; }
-  .offset-by-two.column,
-  .offset-by-two.columns          { margin-left: 17.3333333333%; }
-  .offset-by-three.column,
-  .offset-by-three.columns        { margin-left: 26%;            }
-  .offset-by-four.column,
-  .offset-by-four.columns         { margin-left: 34.6666666667%; }
-  .offset-by-five.column,
-  .offset-by-five.columns         { margin-left: 43.3333333333%; }
-  .offset-by-six.column,
-  .offset-by-six.columns          { margin-left: 52%;            }
-  .offset-by-seven.column,
-  .offset-by-seven.columns        { margin-left: 60.6666666667%; }
-  .offset-by-eight.column,
-  .offset-by-eight.columns        { margin-left: 69.3333333333%; }
-  .offset-by-nine.column,
-  .offset-by-nine.columns         { margin-left: 78.0%;          }
-  .offset-by-ten.column,
-  .offset-by-ten.columns          { margin-left: 86.6666666667%; }
-  .offset-by-eleven.column,
-  .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
-
-  .offset-by-one-third.column,
-  .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
-  .offset-by-two-thirds.column,
-  .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
-
-  .offset-by-one-half.column,
-  .offset-by-one-half.columns     { margin-left: 52%; }
-
-}
-html {
-  font-size: 62.5%; }
-body {
-  font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
-  line-height: 1.6;
-  font-weight: 400;
-  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #222; }
-h1, h2, h3, h4, h5, h6 {
-  margin-top: 0;
-  margin-bottom: 2rem;
-  font-weight: 300; }
-h1 { font-size: 3.6rem; line-height: 1.2;  letter-spacing: -.1rem;}
-h2 { font-size: 3.4rem; line-height: 1.25; letter-spacing: -.1rem; }
-h3 { font-size: 3.2rem; line-height: 1.3;  letter-spacing: -.1rem; }
-h4 { font-size: 2.8rem; line-height: 1.35; letter-spacing: -.08rem; }
-h5 { font-size: 2.4rem; line-height: 1.5;  letter-spacing: -.05rem; }
-h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
-
-p {
-  margin-top: 0; }
-a {
-  color: #1EAEDB; }
-a:hover {
-  color: #0FA0CE; }
-.button,
-button,
-input[type="submit"],
-input[type="reset"],
-input[type="button"] {
-  display: inline-block;
-  height: 38px;
-  padding: 0 30px;
-  color: #555;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 38px;
-  letter-spacing: .1rem;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-  background-color: transparent;
-  border-radius: 4px;
-  border: 1px solid #bbb;
-  cursor: pointer;
-  box-sizing: border-box; }
-.button:hover,
-button:hover,
-input[type="submit"]:hover,
-input[type="reset"]:hover,
-input[type="button"]:hover,
-.button:focus,
-button:focus,
-input[type="submit"]:focus,
-input[type="reset"]:focus,
-input[type="button"]:focus {
-  color: #333;
-  border-color: #888;
-  outline: 0; }
-.button.button-primary,
-button.button-primary,
-input[type="submit"].button-primary,
-input[type="reset"].button-primary,
-input[type="button"].button-primary {
-  color: #FFF;
-  background-color: #33C3F0;
-  border-color: #33C3F0; }
-.button.button-primary:hover,
-button.button-primary:hover,
-input[type="submit"].button-primary:hover,
-input[type="reset"].button-primary:hover,
-input[type="button"].button-primary:hover,
-.button.button-primary:focus,
-button.button-primary:focus,
-input[type="submit"].button-primary:focus,
-input[type="reset"].button-primary:focus,
-input[type="button"].button-primary:focus {
-  color: #FFF;
-  background-color: #1EAEDB;
-  border-color: #1EAEDB; }
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="text"],
-input[type="tel"],
-input[type="url"],
-input[type="password"],
-textarea,
-select {
-  height: 38px;
-  padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
-  background-color: #fff;
-  border: 1px solid #D1D1D1;
-  border-radius: 4px;
-  box-shadow: none;
-  box-sizing: border-box; }
-/* Removes awkward default styles on some inputs for iOS */
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="text"],
-input[type="tel"],
-input[type="url"],
-input[type="password"],
-textarea {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none; }
-textarea {
-  min-height: 65px;
-  padding-top: 6px;
-  padding-bottom: 6px; }
-input[type="email"]:focus,
-input[type="number"]:focus,
-input[type="search"]:focus,
-input[type="text"]:focus,
-input[type="tel"]:focus,
-input[type="url"]:focus,
-input[type="password"]:focus,
-textarea:focus,
-select:focus {
-  border: 1px solid #33C3F0;
-  outline: 0; }
-label,
-legend {
-  display: block;
-  margin-bottom: .5rem;
-  font-weight: 600; }
-fieldset {
-  padding: 0;
-  border-width: 0; }
-input[type="checkbox"],
-input[type="radio"] {
-  display: inline; }
-label > .label-body {
-  display: inline-block;
-  margin-left: .5rem;
-  font-weight: normal; }
-ul {
-  list-style: circle; }
-ol {
-  list-style: decimal; }
-ul ul,
-ul ol,
-ol ol,
-ol ul {
-  margin: 1.5rem 0 1.5rem 3rem;
-  font-size: 90%; }
-li {
-  margin-bottom: 1rem; }
-th,
-td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #E1E1E1; }
-th:first-child,
-td:first-child {
-  padding-left: 0; }
-th:last-child,
-td:last-child {
-  padding-right: 0; }
-button,
-.button {
-  margin-bottom: 1rem; }
-input,
-textarea,
-select,
-fieldset {
-  margin-bottom: 1.5rem; }
-pre,
-blockquote,
-dl,
-figure,
-table,
-p,
-ul,
-ol,
-form {
-  margin-bottom: 2.5rem; }
-.u-full-width {
-  width: 100%;
-  box-sizing: border-box; }
-.u-max-full-width {
-  max-width: 100%;
-  box-sizing: border-box; }
-.u-pull-right {
-  float: right; }
-.u-pull-left {
-  float: left; }
-hr {
-  margin-top: 3rem;
-  margin-bottom: 3.5rem;
-  border-width: 0;
-  border-top: 1px solid #E1E1E1; }
-.container:after,
-.row:after,
-.u-cf {
-  content: "";
-  display: table;
-  clear: both; }
-
-pre {
-  display: block;
-  padding: 9.5px;
-  margin: 0 0 10px;
-  font-size: 13px;
-  line-height: 1.42857143;
-  color: #333;
-  word-break: break-all;
-  word-wrap: break-word;
-  background-color: #ffffff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-pre.sourceCode.julia {
-  display: block;
-  padding: 9.5px;
-  margin: 0 0 10px;
-  font-size: 13px;
-  line-height: 1.42857143;
-  color: #333;
-  word-break: break-all;
-  word-wrap: break-word;
-  background-color: #f5f5f5;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-pre.julia-error {
-  color : red
-}
-
-code,
-kbd,
-pre,
-samp {
-  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-code {
-  padding: 2px 4px;
-  font-size: 90%;
-
-  background-color: #ffffff;
-  border-radius: 4px;
-}
-
-@media (min-width: 400px) {}
-@media (min-width: 550px) {}
-@media (min-width: 750px) {}
-@media (min-width: 1000px) {}
-@media (min-width: 1200px) {}
-
-h1.title {margin-top : 20px}
-img {max-width : 100%}
-div.title {text-align: center;}
-
+    width: 100%;
+    float: left;
+    box-sizing: border-box; }
+  @media (min-width: 400px) {
+    .container {
+      width: 85%;
+      padding: 0; }
+  }
+  @media (min-width: 550px) {
+    .container {
+      width: 80%; }
+    .column,
+    .columns {
+      margin-left: 4%; }
+    .column:first-child,
+    .columns:first-child {
+      margin-left: 0; }
+  
+    .one.column,
+    .one.columns                    { width: 4.66666666667%; }
+    .two.columns                    { width: 13.3333333333%; }
+    .three.columns                  { width: 22%;            }
+    .four.columns                   { width: 30.6666666667%; }
+    .five.columns                   { width: 39.3333333333%; }
+    .six.columns                    { width: 48%;            }
+    .seven.columns                  { width: 56.6666666667%; }
+    .eight.columns                  { width: 65.3333333333%; }
+    .nine.columns                   { width: 74.0%;          }
+    .ten.columns                    { width: 82.6666666667%; }
+    .eleven.columns                 { width: 91.3333333333%; }
+    .twelve.columns                 { width: 100%; margin-left: 0; }
+  
+    .one-third.column               { width: 30.6666666667%; }
+    .two-thirds.column              { width: 65.3333333333%; }
+  
+    .one-half.column                { width: 48%; }
+  
+    /* Offsets */
+    .offset-by-one.column,
+    .offset-by-one.columns          { margin-left: 8.66666666667%; }
+    .offset-by-two.column,
+    .offset-by-two.columns          { margin-left: 17.3333333333%; }
+    .offset-by-three.column,
+    .offset-by-three.columns        { margin-left: 26%;            }
+    .offset-by-four.column,
+    .offset-by-four.columns         { margin-left: 34.6666666667%; }
+    .offset-by-five.column,
+    .offset-by-five.columns         { margin-left: 43.3333333333%; }
+    .offset-by-six.column,
+    .offset-by-six.columns          { margin-left: 52%;            }
+    .offset-by-seven.column,
+    .offset-by-seven.columns        { margin-left: 60.6666666667%; }
+    .offset-by-eight.column,
+    .offset-by-eight.columns        { margin-left: 69.3333333333%; }
+    .offset-by-nine.column,
+    .offset-by-nine.columns         { margin-left: 78.0%;          }
+    .offset-by-ten.column,
+    .offset-by-ten.columns          { margin-left: 86.6666666667%; }
+    .offset-by-eleven.column,
+    .offset-by-eleven.columns       { margin-left: 95.3333333333%; }
+  
+    .offset-by-one-third.column,
+    .offset-by-one-third.columns    { margin-left: 34.6666666667%; }
+    .offset-by-two-thirds.column,
+    .offset-by-two-thirds.columns   { margin-left: 69.3333333333%; }
+  
+    .offset-by-one-half.column,
+    .offset-by-one-half.columns     { margin-left: 52%; }
+  
+  }
+  html {
+    font-size: 62.5%; }
+  body {
+    font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
+    line-height: 1.6;
+    font-weight: 400;
+    font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #222; }
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 2rem;
+    font-weight: 300; }
+  h1 { font-size: 3.6rem; line-height: 1.2;  letter-spacing: -.1rem;}
+  h2 { font-size: 3.4rem; line-height: 1.25; letter-spacing: -.1rem; }
+  h3 { font-size: 3.2rem; line-height: 1.3;  letter-spacing: -.1rem; }
+  h4 { font-size: 2.8rem; line-height: 1.35; letter-spacing: -.08rem; }
+  h5 { font-size: 2.4rem; line-height: 1.5;  letter-spacing: -.05rem; }
+  h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
+  
+  p {
+    margin-top: 0; }
+  a {
+    color: #1EAEDB; }
+  a:hover {
+    color: #0FA0CE; }
+  .button,
+  button,
+  input[type="submit"],
+  input[type="reset"],
+  input[type="button"] {
+    display: inline-block;
+    height: 38px;
+    padding: 0 30px;
+    color: #555;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 38px;
+    letter-spacing: .1rem;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border-radius: 4px;
+    border: 1px solid #bbb;
+    cursor: pointer;
+    box-sizing: border-box; }
+  .button:hover,
+  button:hover,
+  input[type="submit"]:hover,
+  input[type="reset"]:hover,
+  input[type="button"]:hover,
+  .button:focus,
+  button:focus,
+  input[type="submit"]:focus,
+  input[type="reset"]:focus,
+  input[type="button"]:focus {
+    color: #333;
+    border-color: #888;
+    outline: 0; }
+  .button.button-primary,
+  button.button-primary,
+  input[type="submit"].button-primary,
+  input[type="reset"].button-primary,
+  input[type="button"].button-primary {
+    color: #FFF;
+    background-color: #33C3F0;
+    border-color: #33C3F0; }
+  .button.button-primary:hover,
+  button.button-primary:hover,
+  input[type="submit"].button-primary:hover,
+  input[type="reset"].button-primary:hover,
+  input[type="button"].button-primary:hover,
+  .button.button-primary:focus,
+  button.button-primary:focus,
+  input[type="submit"].button-primary:focus,
+  input[type="reset"].button-primary:focus,
+  input[type="button"].button-primary:focus {
+    color: #FFF;
+    background-color: #1EAEDB;
+    border-color: #1EAEDB; }
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  input[type="text"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  textarea,
+  select {
+    height: 38px;
+    padding: 6px 10px; /* The 6px vertically centers text on FF, ignored by Webkit */
+    background-color: #fff;
+    border: 1px solid #D1D1D1;
+    border-radius: 4px;
+    box-shadow: none;
+    box-sizing: border-box; }
+  /* Removes awkward default styles on some inputs for iOS */
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  input[type="text"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  textarea {
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none; }
+  textarea {
+    min-height: 65px;
+    padding-top: 6px;
+    padding-bottom: 6px; }
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="search"]:focus,
+  input[type="text"]:focus,
+  input[type="tel"]:focus,
+  input[type="url"]:focus,
+  input[type="password"]:focus,
+  textarea:focus,
+  select:focus {
+    border: 1px solid #33C3F0;
+    outline: 0; }
+  label,
+  legend {
+    display: block;
+    margin-bottom: .5rem;
+    font-weight: 600; }
+  fieldset {
+    padding: 0;
+    border-width: 0; }
+  input[type="checkbox"],
+  input[type="radio"] {
+    display: inline; }
+  label > .label-body {
+    display: inline-block;
+    margin-left: .5rem;
+    font-weight: normal; }
+  ul {
+    list-style: circle inside; }
+  ol {
+    list-style: decimal inside; }
+  ol, ul {
+    padding-left: 0;
+    margin-top: 0; }
+  ul ul,
+  ul ol,
+  ol ol,
+  ol ul {
+    margin: 1.5rem 0 1.5rem 3rem;
+    font-size: 90%; }
+  li {
+    margin-bottom: 1rem; }
+  th,
+  td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #E1E1E1; }
+  th:first-child,
+  td:first-child {
+    padding-left: 0; }
+  th:last-child,
+  td:last-child {
+    padding-right: 0; }
+  button,
+  .button {
+    margin-bottom: 1rem; }
+  input,
+  textarea,
+  select,
+  fieldset {
+    margin-bottom: 1.5rem; }
+  pre,
+  blockquote,
+  dl,
+  figure,
+  table,
+  p,
+  ul,
+  ol,
+  form {
+    margin-bottom: 2.5rem; }
+  .u-full-width {
+    width: 100%;
+    box-sizing: border-box; }
+  .u-max-full-width {
+    max-width: 100%;
+    box-sizing: border-box; }
+  .u-pull-right {
+    float: right; }
+  .u-pull-left {
+    float: left; }
+  hr {
+    margin-top: 3rem;
+    margin-bottom: 3.5rem;
+    border-width: 0;
+    border-top: 1px solid #E1E1E1; }
+  .container:after,
+  .row:after,
+  .u-cf {
+    content: "";
+    display: table;
+    clear: both; }
+  
+  pre {
+    display: block;
+    padding: 9.5px;
+    margin: 0 0 10px;
+    font-size: 13px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  pre.sourceCode.julia {
+    display: block;
+    padding: 9.5px;
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  pre.julia-error {
+    color : red
+  }
+  
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  }
+  code {
+    background-color: #ffffff;
+    border-radius: 4px;
+  }
+  
+  code.sourceCode.julia {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+  }
+  
+  
+  @media (min-width: 400px) {}
+  @media (min-width: 550px) {}
+  @media (min-width: 750px) {}
+  @media (min-width: 1000px) {}
+  @media (min-width: 1200px) {}
+  
+  h1.title {margin-top : 20px}
+  img {max-width : 100%}
   </style>
 
-  
+
 <style>
 pre.hljl {
     border: 1px solid #ccc;
@@ -653,128 +653,168 @@ pre.hljl > span.hljl-gt { }
 
 
 
-</HEAD>
-  <BODY>
-    <div class ="container">
-      <div class = "row">
-        <div class = "col-md-12 twelve columns">
-
-          <div class="title">
-            
-            
-            
-          </div>
-
-          <h1>Analysis of MRK16 data</h1>
-<p>Load packages</p>
+</head>
+<body>
+<div class="container">
+        <div class="row">
+            <div class="col-md-12 twelve columns">
 
 
-<pre class='hljl'>
-<span class='hljl-k'>using</span><span class='hljl-t'> </span><span class='hljl-n'>DataFramesMeta</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>InteractiveUtils</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>LinearAlgebra</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>MixedModels</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>RData</span>
+
+<h1 class="title">Re-analysis of data from Masson, Rabe and Kliegl (2017)</h1>
+
+<p><strong>Author:</strong>
+Douglas Bates, Maximillian Rabe &amp; Reinhold Kliegl
+<br />
+
+<strong>Date: </strong>2018-09-28
+</p>
+
+<p>This is a Julia Markdown (<code>.jmd</code>) file that can be executed with the <a href="https://github.com/mpastell/Weave.jl"><code>Weave</code> package</a> for the <a href="https://julialang.org/"><code>Julia</code></a> programming language.</p>
+<h3 id="data-description-and-importing-the-data">Data description and importing the data</h3>
+<p>The experiment that generated these data is described in Masson, Rabe and Kliegl (2017), <em>Mem. Cogn.</em> <strong>45</strong>:480-492 (DOI 10.3758/s13421-016-0666-z). The data from Experiment 1 were converted to an <a href="https://www.r-project.org"><code>R</code></a> data frame and saved in the compressed, serialized file, <code>MRK_Exp1.rds</code>, using the <code>saveRDS</code> function in <code>R</code>.</p>
+<p>This compressed serialized format can be loaded into Julia using the <a href="https:github.com/JuliaData/RData.jl"><code>RData</code></a> package. The <a href="https://github.com/JuliaStats/DataFramesMeta.jl"><code>DataFramesMeta</code></a> package allows for transformations and selections on a data frame, similar to the <code>dplyr</code> package for <code>R</code>. The <a href="https://github.com/dmbates/MixedModels.jl"><code>MixedModels</code></a> package provides methods of fitting and examining linear and generalized linear mixed-effects models. It is similar in scope to the <a href="https://github.com/lme4/lme4"><code>lme4</code></a> package for <code>R</code>.</p>
+<p>The <code>InteractiveUtils</code> and <code>LinearAlgebra</code> packages are standard library packages for Julia. The specific uses for these are to access the <code>versioninfo</code> function in <code>InteractiveUtils</code> and the <code>svdvals</code> function in <code>LinearAlgebra</code>.</p>
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-k">using</span><span class="hljl-t"> </span><span class="hljl-n">DataFramesMeta</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">InteractiveUtils</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">LinearAlgebra</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">MixedModels</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">RData</span><span class="hljl-t">a</span>
 </pre>
-
-
-
-<p>Load the data from experiment 1 and remove outliers &#40;response time must be between 300 and 3000 ms.&#41; Select the columns of interest. Convert the two-level factors to the &#91;-1, 1&#93; encoding as that is more stable than &#91;-0.5, 0.5&#93; when forming high-order interactions.</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>d2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nd'>@linq</span><span class='hljl-t'> </span><span class='hljl-nf'>load</span><span class='hljl-p'>(</span><span class='hljl-s'>&quot;MRK_Exp1.rds&quot;</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
-           </span><span class='hljl-nf'>where</span><span class='hljl-p'>(</span><span class='hljl-ni'>300</span><span class='hljl-t'> </span><span class='hljl-oB'>.≤</span><span class='hljl-t'> </span><span class='hljl-sc'>:rt</span><span class='hljl-t'> </span><span class='hljl-oB'>.≤</span><span class='hljl-t'> </span><span class='hljl-ni'>3000</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
-           </span><span class='hljl-nf'>select</span><span class='hljl-p'>(</span><span class='hljl-sc'>:rrt</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:P</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:F</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:Q</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:L</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:W</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:id</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-sc'>:st</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>|&gt;</span><span class='hljl-t'>
-           </span><span class='hljl-nf'>transform</span><span class='hljl-p'>(</span><span class='hljl-n'>P</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:P</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>F</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:F</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>Q</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:Q</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>L</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:L</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-n'>W</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-ni'>2</span><span class='hljl-t'> </span><span class='hljl-oB'>.*</span><span class='hljl-t'> </span><span class='hljl-sc'>:W</span><span class='hljl-p'>)</span><span class='hljl-t'>
-16409×8 DataFrames.DataFrame
-│ Row   │ rrt      │ P    │ F    │ Q    │ L    │ W    │ id  │ st      │
-├───────┼──────────┼──────┼──────┼──────┼──────┼──────┼─────┼─────────┤
-│ 1     │ -1.25945 │ 1.0  │ 1.0  │ 1.0  │ 1.0  │ 1.0  │ S1  │ CAKE    │
-│ 2     │ -1.97628 │ 1.0  │ -1.0 │ -1.0 │ 1.0  │ -1.0 │ S1  │ PARTY   │
-│ 3     │ -2.03666 │ -1.0 │ -1.0 │ -1.0 │ 1.0  │ 1.0  │ S1  │ SPOT    │
-│ 4     │ -2.05761 │ -1.0 │ -1.0 │ 1.0  │ 1.0  │ 1.0  │ S1  │ LONG    │
-│ 5     │ -2.07469 │ 1.0  │ -1.0 │ 1.0  │ 1.0  │ -1.0 │ S1  │ YEAR    │
-│ 6     │ -1.84502 │ -1.0 │ -1.0 │ -1.0 │ 1.0  │ -1.0 │ S1  │ COUNTRY │
-│ 7     │ -1.30548 │ -1.0 │ -1.0 │ 1.0  │ 1.0  │ 1.0  │ S1  │ HAVE    │
-│ 8     │ -1.00705 │ 1.0  │ 1.0  │ 1.0  │ -1.0 │ 1.0  │ S1  │ TUSK    │
+<p>Load the data from experiment 1 and remove those rows with response time less than 300 ms. or greater than 3000 ms. Select the columns of interest, which are</p>
+<table>
+<thead>
+<tr class="header">
+<th>Factor</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>W</td>
+<td>Last trial status</td>
+</tr>
+<tr class="even">
+<td>L</td>
+<td>Last trial quality</td>
+</tr>
+<tr class="odd">
+<td>Q</td>
+<td>Quality</td>
+</tr>
+<tr class="even">
+<td>F</td>
+<td>Frequency</td>
+</tr>
+<tr class="odd">
+<td>P</td>
+<td>Prime</td>
+</tr>
+<tr class="even">
+<td>id</td>
+<td>Subject</td>
+</tr>
+<tr class="odd">
+<td>st</td>
+<td>Stimulus</td>
+</tr>
+</tbody>
+</table>
+<p>The two-level factors in the saved data are coded as ±0.5 For additional stability when forming high-order interaction terms, convert to a ±1 encoding. (If we form interaction terms numerically from ±1 coded factors the results will also be ±1 coded, no matter how high the interaction order is, and the columns of the model matrix will have the same Euclidean length.)</p>
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">d2</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-nd">@linq</span><span class="hljl-t"> </span><span class="hljl-nf">load</span><span class="hljl-p">(</span><span class="hljl-s">&quot;MRK_Exp1.rds&quot;</span><span class="hljl-p">)</span><span class="hljl-t"> </span><span class="hljl-oB">|&gt;</span><span class="hljl-t">
+           </span><span class="hljl-nf">where</span><span class="hljl-p">(</span><span class="hljl-ni">300</span><span class="hljl-t"> </span><span class="hljl-oB">.≤</span><span class="hljl-t"> </span><span class="hljl-sc">:rt</span><span class="hljl-t"> </span><span class="hljl-oB">.≤</span><span class="hljl-t"> </span><span class="hljl-ni">3000</span><span class="hljl-p">)</span><span class="hljl-t"> </span><span class="hljl-oB">|&gt;</span><span class="hljl-t">
+           </span><span class="hljl-nf">select</span><span class="hljl-p">(</span><span class="hljl-sc">:rrt</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:P</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:F</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:Q</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:L</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:W</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:id</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-sc">:st</span><span class="hljl-p">)</span><span class="hljl-t"> </span><span class="hljl-oB">|&gt;</span><span class="hljl-t">
+           </span><span class="hljl-nf">transform</span><span class="hljl-p">(</span><span class="hljl-n">P</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-ni">2</span><span class="hljl-t"> </span><span class="hljl-oB">.*</span><span class="hljl-t"> </span><span class="hljl-sc">:P</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">F</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-ni">2</span><span class="hljl-t"> </span><span class="hljl-oB">.*</span><span class="hljl-t"> </span><span class="hljl-sc">:F</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">Q</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-ni">2</span><span class="hljl-t"> </span><span class="hljl-oB">.*</span><span class="hljl-t"> </span><span class="hljl-sc">:Q</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">L</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-ni">2</span><span class="hljl-t"> </span><span class="hljl-oB">.*</span><span class="hljl-t"> </span><span class="hljl-sc">:L</span><span class="hljl-p">,</span><span class="hljl-t"> </span><span class="hljl-n">W</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-ni">2</span><span class="hljl-t"> </span><span class="hljl-oB">.*</span><span class="hljl-t"> </span><span class="hljl-sc">:W</span><span class="hljl-p">)</span><span class="hljl-t">
+16409×8 DataFrames.DataFrame. Omitted printing of 2 columns
+│ Row   │ rrt      │ P       │ F       │ Q       │ L       │ W       │
+│       │ Float64  │ Float64 │ Float64 │ Float64 │ Float64 │ Float64 │
+├───────┼──────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+│ 1     │ -1.25945 │ 1.0     │ 1.0     │ 1.0     │ 1.0     │ 1.0     │
+│ 2     │ -1.97628 │ 1.0     │ -1.0    │ -1.0    │ 1.0     │ -1.0    │
+│ 3     │ -2.03666 │ -1.0    │ -1.0    │ -1.0    │ 1.0     │ 1.0     │
+│ 4     │ -2.05761 │ -1.0    │ -1.0    │ 1.0     │ 1.0     │ 1.0     │
+│ 5     │ -2.07469 │ 1.0     │ -1.0    │ 1.0     │ 1.0     │ -1.0    │
+│ 6     │ -1.84502 │ -1.0    │ -1.0    │ -1.0    │ 1.0     │ -1.0    │
+│ 7     │ -1.30548 │ -1.0    │ -1.0    │ 1.0     │ 1.0     │ 1.0     │
 ⋮
-│ 16401 │ -1.50602 │ 1.0  │ -1.0 │ -1.0 │ 1.0  │ 1.0  │ S73 │ PARTY   │
-│ 16402 │ -1.78571 │ 1.0  │ -1.0 │ -1.0 │ -1.0 │ 1.0  │ S73 │ HORSE   │
-│ 16403 │ -1.43885 │ 1.0  │ -1.0 │ 1.0  │ -1.0 │ 1.0  │ S73 │ ARMY    │
-│ 16404 │ -1.65289 │ -1.0 │ 1.0  │ -1.0 │ 1.0  │ -1.0 │ S73 │ GUILT   │
-│ 16405 │ -1.44092 │ -1.0 │ 1.0  │ 1.0  │ -1.0 │ -1.0 │ S73 │ CORN    │
-│ 16406 │ -2.03666 │ 1.0  │ -1.0 │ 1.0  │ 1.0  │ -1.0 │ S73 │ READ    │
-│ 16407 │ -1.23457 │ 1.0  │ -1.0 │ 1.0  │ 1.0  │ -1.0 │ S73 │ MOUTH   │
-│ 16408 │ -1.83824 │ -1.0 │ -1.0 │ 1.0  │ -1.0 │ 1.0  │ S73 │ HOTEL   │
-│ 16409 │ -1.92308 │ -1.0 │ -1.0 │ 1.0  │ 1.0  │ 1.0  │ S73 │ SPACE   │</span>
+│ 16402 │ -1.78571 │ 1.0     │ -1.0    │ -1.0    │ -1.0    │ 1.0     │
+│ 16403 │ -1.43885 │ 1.0     │ -1.0    │ 1.0     │ -1.0    │ 1.0     │
+│ 16404 │ -1.65289 │ -1.0    │ 1.0     │ -1.0    │ 1.0     │ -1.0    │
+│ 16405 │ -1.44092 │ -1.0    │ 1.0     │ 1.0     │ -1.0    │ -1.0    │
+│ 16406 │ -2.03666 │ 1.0     │ -1.0    │ 1.0     │ 1.0     │ -1.0    │
+│ 16407 │ -1.23457 │ 1.0     │ -1.0    │ 1.0     │ 1.0     │ -1.0    │
+│ 16408 │ -1.83824 │ -1.0    │ -1.0    │ 1.0     │ -1.0    │ 1.0     │
+│ 16409 │ -1.92308 │ -1.0    │ -1.0    │ 1.0     │ 1.0     │ 1.0     │</span>
 </pre>
-
-<p>A model with fixed-effects interactions and random-effects interactions with factors and two-factor interactions</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-nd'>@time</span><span class='hljl-t'> </span><span class='hljl-n'>m1</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-nf'>fit</span><span class='hljl-p'>(</span><span class='hljl-n'>LinearMixedModel</span><span class='hljl-p'>,</span><span class='hljl-t'> </span><span class='hljl-nd'>@formula</span><span class='hljl-p'>(</span><span class='hljl-n'>rrt</span><span class='hljl-t'> </span><span class='hljl-oB'>~</span><span class='hljl-t'> </span><span class='hljl-ni'>1</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-n'>F</span><span class='hljl-oB'>*</span><span class='hljl-n'>P</span><span class='hljl-oB'>*</span><span class='hljl-n'>Q</span><span class='hljl-oB'>*</span><span class='hljl-n'>L</span><span class='hljl-oB'>*</span><span class='hljl-n'>W</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-oB'>+</span><span class='hljl-n'>P</span><span class='hljl-oB'>+</span><span class='hljl-n'>Q</span><span class='hljl-oB'>+</span><span class='hljl-n'>L</span><span class='hljl-oB'>+</span><span class='hljl-n'>W</span><span class='hljl-t'> </span><span class='hljl-oB'>|</span><span class='hljl-t'> </span><span class='hljl-n'>st</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>+</span><span class='hljl-t'> </span><span class='hljl-p'>(</span><span class='hljl-ni'>1</span><span class='hljl-oB'>+</span><span class='hljl-n'>F</span><span class='hljl-oB'>+</span><span class='hljl-n'>P</span><span class='hljl-oB'>+</span><span class='hljl-n'>Q</span><span class='hljl-oB'>+</span><span class='hljl-n'>L</span><span class='hljl-oB'>+</span><span class='hljl-n'>W</span><span class='hljl-t'> </span><span class='hljl-oB'>|</span><span class='hljl-t'> </span><span class='hljl-n'>id</span><span class='hljl-p'>)),</span><span class='hljl-t'> </span><span class='hljl-n'>d2</span><span class='hljl-p'>);</span><span class='hljl-t'>
- 26.659315 seconds (47.02 M allocations: 977.354 MiB, 2.33% gc time)
-
-</span><span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>show</span><span class='hljl-p'>(</span><span class='hljl-n'>m1</span><span class='hljl-p'>)</span><span class='hljl-t'>
+<p>(The name <code>linq</code> echoes that of the MicroSoft Visual Studio <a href="https://msdn.microsoft.com/en-us/library/bb397926.aspx"><code>Language Integrated Query</code></a> library. The <code>@</code> character indicates this is a call to a macro, not a function in Julia. See the documentation of the <a href="https://github.com/JuliaStats/DataFramesMeta.jl"><code>DataFramesMeta</code></a> package for details.)</p>
+<h3 id="fit-a-mixed-effects-model">Fit a mixed-effects model</h3>
+A full factorial model in the experimental factors with random-effects for <code>id</code> and <code>st</code> and potentially correlated random “slopes” for the experimental factors is defined as
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">m1</span><span class="hljl-t"> </span><span class="hljl-oB">=</span><span class="hljl-t"> </span><span class="hljl-nf">LinearMixedModel</span><span class="hljl-p">(</span><span class="hljl-nd">@formula</span><span class="hljl-p">(</span><span class="hljl-n">rrt</span><span class="hljl-t"> </span><span class="hljl-oB">~</span><span class="hljl-t"> </span><span class="hljl-ni">1</span><span class="hljl-t"> </span><span class="hljl-oB">+</span><span class="hljl-t"> </span><span class="hljl-n">F</span><span class="hljl-oB">*</span><span class="hljl-n">P</span><span class="hljl-oB">*</span><span class="hljl-n">Q</span><span class="hljl-oB">*</span><span class="hljl-n">L</span><span class="hljl-oB">*</span><span class="hljl-n">W</span><span class="hljl-t"> </span><span class="hljl-oB">+</span><span class="hljl-t"> </span><span class="hljl-p">(</span><span class="hljl-ni">1</span><span class="hljl-oB">+</span><span class="hljl-n">P</span><span class="hljl-oB">+</span><span class="hljl-n">Q</span><span class="hljl-oB">+</span><span class="hljl-n">L</span><span class="hljl-oB">+</span><span class="hljl-n">W</span><span class="hljl-t"> </span><span class="hljl-oB">|</span><span class="hljl-t"> </span><span class="hljl-n">st</span><span class="hljl-p">)</span><span class="hljl-t"> </span><span class="hljl-oB">+</span><span class="hljl-t"> </span><span class="hljl-p">(</span><span class="hljl-ni">1</span><span class="hljl-oB">+</span><span class="hljl-n">F</span><span class="hljl-oB">+</span><span class="hljl-n">P</span><span class="hljl-oB">+</span><span class="hljl-n">Q</span><span class="hljl-oB">+</span><span class="hljl-n">L</span><span class="hljl-oB">+</span><span class="hljl-n">W</span><span class="hljl-t"> </span><span class="hljl-oB">|</span><span class="hljl-t"> </span><span class="hljl-n">id</span><span class="hljl-p">)),</span><span class="hljl-t"> </span><span class="hljl-n">d2</span><span class="hljl-p">)</span><span class="hljl-t">;</span>
+</pre>
+and fit as
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-nf">fit!</span><span class="hljl-p">(</span><span class="hljl-n">m1</span><span class="hljl-p">)</span><span class="hljl-t">
 Linear mixed model fit by maximum likelihood
  Formula: rrt ~ 1 + F + P + Q + L + W + F &amp; P + F &amp; Q + P &amp; Q + F &amp; L + P &amp; L + Q &amp; L + F &amp; W + P &amp; W + Q &amp; W + L &amp; W + &amp;(F, P, Q) + &amp;(F, P, L) + &amp;(F, Q, L) + &amp;(P, Q, L) + &amp;(F, P, W) + &amp;(F, Q, W) + &amp;(P, Q, W) + &amp;(F, L, W) + &amp;(P, L, W) + &amp;(Q, L, W) + &amp;(F, P, Q, L) + &amp;(F, P, Q, W) + &amp;(F, P, L, W) + &amp;(F, Q, L, W) + &amp;(P, Q, L, W) + &amp;(F, P, Q, L, W) + ((1 + P + Q + L + W) | st) + ((1 + F + P + Q + L + W) | id)
      logLik        -2 logLik          AIC             BIC       
- -3.57376088×10³  7.14752175×10³  7.28552175×10³  7.81720713×10³
+ -3.57396102×10³  7.14792204×10³  7.28592204×10³  7.81760743×10³
 
 Variance components:
-              Column      Variance      Std.Dev.     Corr.
- st       (Intercept)  0.003202093877 0.0565870469
-          P            0.000128760019 0.0113472472 -0.05
-          Q            0.000159912863 0.0126456658 -0.36  0.38
-          L            0.000034858883 0.0059041412 -0.37  0.03  0.03
-          W            0.000157372454 0.0125448178  0.11 -0.87 -0.01 -0.35
- id       (Intercept)  0.030624523503 0.1749986386
-          F            0.000046180330 0.0067956111 -0.35
-          P            0.000125667099 0.0112101338 -0.35  0.89
-          Q            0.000789819806 0.0281037330 -0.41  0.43  0.74
-          L            0.000117191731 0.0108255130 -0.06  0.14  0.18  0.57
-          W            0.001045788808 0.0323386581 -0.26 -0.07 -0.04  0.37  0.50
- Residual              0.085698741655 0.2927434741
+              Column      Variance     Std.Dev.    Corr.
+ st       (Intercept)  0.00320273934 0.056592750
+          P            0.00012899963 0.011357800 -0.05
+          Q            0.00015932536 0.012622415 -0.36  0.38
+          L            0.00003492070 0.005909374 -0.37  0.03  0.03
+          W            0.00015751675 0.012550568  0.11 -0.87 -0.01 -0.35
+ id       (Intercept)  0.03061291823 0.174965477
+          F            0.00002900289 0.005385433 -0.44
+          P            0.00012920446 0.011366814 -0.35  0.99
+          Q            0.00078842084 0.028078833 -0.41  0.71  0.70
+          L            0.00011519270 0.010732786 -0.06  0.16  0.17  0.58
+          W            0.00104559433 0.032335651 -0.26 -0.02 -0.05  0.37  0.50
+ Residual              0.08571595064 0.292772865
  Number of obs: 16409; levels of grouping factors: 240, 73
 
   Fixed-effects parameters:
                        Estimate  Std.Error     z value P(&gt;|z|)
-(Intercept)            -1.63747  0.0209315      -78.23  &lt;1e-99
-F                     0.0192538 0.00438702     4.38882   &lt;1e-4
-P                     0.0188287 0.00274326     6.86362  &lt;1e-11
-Q                     0.0427467 0.00409385     10.4417  &lt;1e-24
-L                    0.00161665 0.00266278    0.607128  0.5438
-W                     0.0083949 0.00450725     1.86253  0.0625
-F &amp; P                0.00720539 0.00240991      2.9899  0.0028
-F &amp; Q                0.00139211 0.00243549    0.571592  0.5676
-P &amp; Q               -0.00137909  0.0022963   -0.600571  0.5481
-F &amp; L               0.000989568 0.00234782    0.421484  0.6734
-P &amp; L                0.00238901 0.00231525     1.03186  0.3021
-Q &amp; L                -0.0077537 0.00231437    -3.35024  0.0008
-F &amp; W              -0.000468932 0.00244666   -0.191662  0.8480
-P &amp; W                4.38695e-5 0.00231303   0.0189662  0.9849
-Q &amp; W               -0.00169513 0.00231264   -0.732983  0.4636
-L &amp; W                 0.0053112 0.00231235     2.29689  0.0216
-F &amp; P &amp; Q          -0.000307823 0.00229632    -0.13405  0.8934
-F &amp; P &amp; L           -0.00134536 0.00231565   -0.580987  0.5612
-F &amp; Q &amp; L            0.00265062 0.00231785     1.14357  0.2528
-P &amp; Q &amp; L           -0.00402733 0.00231688    -1.73825  0.0822
-F &amp; P &amp; W            0.00200437 0.00231407    0.866167  0.3864
-F &amp; Q &amp; W           -0.00120266 0.00231124   -0.520352  0.6028
-P &amp; Q &amp; W           0.000132088 0.00231455   0.0570683  0.9545
-F &amp; L &amp; W            0.00159699 0.00231738    0.689137  0.4907
-P &amp; L &amp; W           -1.46227e-5 0.00231711 -0.00631076  0.9950
-Q &amp; L &amp; W            0.00894289 0.00231446     3.86392  0.0001
-F &amp; P &amp; Q &amp; L        0.00221693 0.00231481    0.957715  0.3382
-F &amp; P &amp; Q &amp; W        0.00135626 0.00231532    0.585777  0.5580
-F &amp; P &amp; L &amp; W       -0.00289818 0.00231786    -1.25037  0.2112
-F &amp; Q &amp; L &amp; W       -0.00402031 0.00231739    -1.73485  0.0828
-P &amp; Q &amp; L &amp; W       -0.00186563 0.00231763   -0.804973  0.4208
-F &amp; P &amp; Q &amp; L &amp; W    0.00129029 0.00231497    0.557369  0.5773</span>
+(Intercept)            -1.63747  0.0209278    -78.2438  &lt;1e-99
+F                     0.0192577  0.0043605     4.41639   &lt;1e-4
+P                      0.018828 0.00275244     6.84048  &lt;1e-11
+Q                      0.042749 0.00409132     10.4487  &lt;1e-24
+L                    0.00161819 0.00265768    0.608872  0.5426
+W                    0.00838243 0.00450706     1.85985  0.0629
+F &amp; P                0.00720747  0.0024103     2.99028  0.0028
+F &amp; Q                0.00139354 0.00243517    0.572254  0.5671
+P &amp; Q                -0.0013762  0.0022965   -0.599262  0.5490
+F &amp; L                0.00100362 0.00234811    0.427414  0.6691
+P &amp; L                0.00238117 0.00231528     1.02846  0.3037
+Q &amp; L               -0.00775059 0.00231448    -3.34873  0.0008
+F &amp; W              -0.000455143 0.00244687   -0.186011  0.8524
+P &amp; W                6.23258e-5 0.00231303   0.0269456  0.9785
+Q &amp; W                -0.0017072 0.00231278    -0.73816  0.4604
+L &amp; W                0.00532213 0.00231248     2.30148  0.0214
+F &amp; P &amp; Q          -0.000302097 0.00229653   -0.131545  0.8953
+F &amp; P &amp; L           -0.00132686 0.00231576    -0.57297  0.5667
+F &amp; Q &amp; L            0.00263179 0.00231783     1.13545  0.2562
+P &amp; Q &amp; L           -0.00401736 0.00231699    -1.73387  0.0829
+F &amp; P &amp; W            0.00200139 0.00231414    0.864853  0.3871
+F &amp; Q &amp; W            -0.0011834 0.00231131   -0.512002  0.6086
+P &amp; Q &amp; W           0.000136195 0.00231456   0.0588428  0.9531
+F &amp; L &amp; W            0.00158487 0.00231761     0.68384  0.4941
+P &amp; L &amp; W            1.10124e-6  0.0023171 0.000475266  0.9996
+Q &amp; L &amp; W            0.00894266 0.00231453      3.8637  0.0001
+F &amp; P &amp; Q &amp; L         0.0022095 0.00231484    0.954494  0.3398
+F &amp; P &amp; Q &amp; W        0.00137071  0.0023153    0.592022  0.5538
+F &amp; P &amp; L &amp; W       -0.00288758  0.0023179    -1.24578  0.2128
+F &amp; Q &amp; L &amp; W       -0.00401418 0.00231752     -1.7321  0.0833
+P &amp; Q &amp; L &amp; W       -0.00188142 0.00231772   -0.811755  0.4169
+F &amp; P &amp; Q &amp; L &amp; W    0.00128903 0.00231502    0.556812  0.5777</span>
 </pre>
-
-<p>Summary of the optimization process</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>m1</span><span class='hljl-oB'>.</span><span class='hljl-n'>optsum</span><span class='hljl-t'>
+<p>(By convention, the names of <em>mutating</em> functions in Julia - those that modify one or more or their arguments - end in <code>!</code> to warn the programmer that arguments can be modified.)</p>
+A summary of the optimization process
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">optsum</span><span class="hljl-t">
 Initial parameter vector: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0  …  1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0]
-Initial objective value:  11981.894272154143
+Initial objective value:  11981.894272154186
 
 Optimizer (from NLopt):   LN_BOBYQA
 Lower bounds:             [0.0, -Inf, -Inf, -Inf, -Inf, 0.0, -Inf, -Inf, -Inf, 0.0  …  0.0, -Inf, -Inf, -Inf, 0.0, -Inf, -Inf, 0.0, -Inf, 0.0]
@@ -785,89 +825,89 @@ xtol_abs:                 [1.0e-10, 1.0e-10, 1.0e-10, 1.0e-10, 1.0e-10, 1.0e-10,
 initial_step:             [0.75, 1.0, 1.0, 1.0, 1.0, 0.75, 1.0, 1.0, 1.0, 0.75  …  0.75, 1.0, 1.0, 1.0, 0.75, 1.0, 1.0, 0.75, 1.0, 0.75]
 maxfeval:                 -1
 
-Function evaluations:     2209
-Final parameter vector:   [0.193299, -0.00209696, -0.0155991, -0.00755219, 0.00484605, 0.038705, 0.015661, 0.000110979, -0.03704, 0.0371132  …  0.0175435, 0.0707103, 0.0049216, 0.00189081, 0.0422313, 0.0347606, 0.076562, 0.0104669, -0.0580836, 0.0426743]
-Final objective value:    7147.521751239839
+Function evaluations:     1224
+Final parameter vector:   [0.193299, -0.00201094, -0.0156074, -0.00747159, 0.00489949, 0.0387417, 0.0156643, 0.000135921, -0.0370575, 0.0370108  …  0.0, -0.0594599, -0.0107455, -0.0476173, 0.0294279, 0.0340899, 0.0321956, 0.00542327, 0.083328, 0.02939]
+Final objective value:    7147.922043791058
 Return code:              FTOL_REACHED</span>
 </pre>
-
-<p>The estimated covariance matrix factors are</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>m1</span><span class='hljl-oB'>.</span><span class='hljl-n'>λ</span><span class='hljl-p'>[</span><span class='hljl-ni'>1</span><span class='hljl-p'>]</span><span class='hljl-t'>  </span><span class='hljl-cs'># for shown target (st)</span><span class='hljl-t'>
+shows that the optimization required over 1200 function evaluations on 36 parameters
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-nf">length</span><span class="hljl-p">(</span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">optsum</span><span class="hljl-oB">.</span><span class="hljl-n">final</span><span class="hljl-p">)</span><span class="hljl-t">
+36</span>
+</pre>
+The time required to fit this model is
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-nd">@time</span><span class="hljl-t"> </span><span class="hljl-nf">fit!</span><span class="hljl-p">(</span><span class="hljl-n">m1</span><span class="hljl-p">);</span><span class="hljl-t">
+ 10.403657 seconds (2.46 M allocations: 131.191 MiB, 0.28% gc time)</span>
+</pre>
+The estimated covariance matrix factors are
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">λ</span><span class="hljl-p">[</span><span class="hljl-ni">1</span><span class="hljl-p">]</span><span class="hljl-t">  </span><span class="hljl-cs"># for shown target (st)</span><span class="hljl-t">
 5×5 LowerTriangular{Float64,Array{Float64,2}}:
-  0.193299      ⋅             ⋅           ⋅          ⋅ 
- -0.00209696   0.038705       ⋅           ⋅          ⋅ 
- -0.0155991    0.015661      0.0371132    ⋅          ⋅ 
- -0.00755219   0.000110979  -0.0025067   0.0185318   ⋅ 
-  0.00484605  -0.03704       0.0173841  -0.0117766  0.0</span>
+  0.193299      ⋅             ⋅            ⋅          ⋅ 
+ -0.00201094   0.0387417      ⋅            ⋅          ⋅ 
+ -0.0156074    0.0156643     0.0370108     ⋅          ⋅ 
+ -0.00747159   0.000135921  -0.00255719   0.0185747   ⋅ 
+  0.00489949  -0.0370575     0.0173925   -0.0117428  0.0</span>
 </pre>
-
-<p>and</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>m1</span><span class='hljl-oB'>.</span><span class='hljl-n'>λ</span><span class='hljl-p'>[</span><span class='hljl-ni'>2</span><span class='hljl-p'>]</span><span class='hljl-t'>  </span><span class='hljl-cs'># for subject (id)</span><span class='hljl-t'>
+and
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">λ</span><span class="hljl-p">[</span><span class="hljl-ni">2</span><span class="hljl-p">]</span><span class="hljl-t">  </span><span class="hljl-cs"># for subject (id)</span><span class="hljl-t">
 6×6 LowerTriangular{Float64,Array{Float64,2}}:
-  0.597788     ⋅          ⋅           ⋅           ⋅          ⋅       
- -0.0081632   0.0217309   ⋅           ⋅           ⋅          ⋅       
- -0.0134803   0.0312552  0.0175435    ⋅           ⋅          ⋅       
- -0.0392858   0.0298235  0.0707103   0.0422313    ⋅          ⋅       
- -0.002034    0.004612   0.0049216   0.0347606   0.0104669   ⋅       
- -0.0283668  -0.0183925  0.00189081  0.076562   -0.0580836  0.0426743</span>
+  0.597615      ⋅            ⋅          ⋅          ⋅           ⋅     
+ -0.00815783   0.0164867     ⋅          ⋅          ⋅           ⋅     
+ -0.0134579    0.0364176    0.0         ⋅          ⋅           ⋅     
+ -0.0392605    0.0570543   -0.0594599  0.0294279   ⋅           ⋅     
+ -0.00204158   0.00572008  -0.0107455  0.0340899  0.00542327   ⋅     
+ -0.0283961   -0.0167552   -0.0476173  0.0321956  0.083328    0.02939</span>
 </pre>
-
-<p>The squares of the singular values of these matrices are on the scale of variances of principal components</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>var1</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>abs2</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>svdvals</span><span class='hljl-p'>(</span><span class='hljl-n'>m1</span><span class='hljl-oB'>.</span><span class='hljl-n'>λ</span><span class='hljl-p'>[</span><span class='hljl-ni'>1</span><span class='hljl-p'>]));</span><span class='hljl-t'>
-
-</span><span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>show</span><span class='hljl-p'>(</span><span class='hljl-n'>var1</span><span class='hljl-p'>)</span><span class='hljl-t'>
-[0.0377075, 0.00318625, 0.00171538, 0.000366954, 0.0]</span>
+The singular values of these factors measure the comparative variability in the directions of the principal axes of the covariance structure.
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">svdvals</span><span class="hljl-oB">.</span><span class="hljl-p">(</span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">λ</span><span class="hljl-p">)</span><span class="hljl-t">
+2-element Array{Array{Float64,1},1}:
+ [0.194182, 0.0564846, 0.0413341, 0.0191747, 0.0]                  
+ [0.599859, 0.115972, 0.0847407, 0.0287916, 0.0209605, 1.72721e-18]</span>
 </pre>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-n'>var2</span><span class='hljl-t'> </span><span class='hljl-oB'>=</span><span class='hljl-t'> </span><span class='hljl-n'>abs2</span><span class='hljl-oB'>.</span><span class='hljl-p'>(</span><span class='hljl-nf'>svdvals</span><span class='hljl-p'>(</span><span class='hljl-n'>m1</span><span class='hljl-oB'>.</span><span class='hljl-n'>λ</span><span class='hljl-p'>[</span><span class='hljl-ni'>2</span><span class='hljl-p'>]));</span><span class='hljl-t'>
-
-</span><span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>show</span><span class='hljl-p'>(</span><span class='hljl-n'>var2</span><span class='hljl-p'>)</span><span class='hljl-t'>
-[0.360039, 0.0134621, 0.00717974, 0.00086412, 0.000597032, 1.0294e-6]</span>
+By analogy to principal components analysis, a quantity of interest is the cumulative proportion of the variance in the first principal direction, the first two, the first three, etc. Defining a function to evaluate this
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-k">function</span><span class="hljl-t"> </span><span class="hljl-nf">cumulative_variance_proportion</span><span class="hljl-p">(</span><span class="hljl-n">a</span><span class="hljl-oB">::</span><span class="hljl-n">AbstractMatrix</span><span class="hljl-p">)</span><span class="hljl-t">
+    cumvar = cumsum(abs2.(svdvals(a)))
+    cumvar ./ cumvar[end]
+end
+cumulative_variance_proportion (generic function with 1 method)</span>
 </pre>
-
-<p>In terms of the cumulative proportion of the variance these are</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>show</span><span class='hljl-p'>(</span><span class='hljl-nf'>cumsum</span><span class='hljl-p'>(</span><span class='hljl-n'>var1</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-nf'>sum</span><span class='hljl-p'>(</span><span class='hljl-n'>var1</span><span class='hljl-p'>))</span><span class='hljl-t'>
-[0.877407, 0.951547, 0.991461, 1.0, 1.0]
-</span><span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>show</span><span class='hljl-p'>(</span><span class='hljl-nf'>cumsum</span><span class='hljl-p'>(</span><span class='hljl-n'>var2</span><span class='hljl-p'>)</span><span class='hljl-t'> </span><span class='hljl-oB'>./</span><span class='hljl-t'> </span><span class='hljl-nf'>sum</span><span class='hljl-p'>(</span><span class='hljl-n'>var2</span><span class='hljl-p'>))</span><span class='hljl-t'>
-[0.942158, 0.977386, 0.996174, 0.998435, 0.999997, 1.0]</span>
+and applying it to these covariance factors
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-n">cumulative_variance_proportion</span><span class="hljl-oB">.</span><span class="hljl-p">(</span><span class="hljl-n">m1</span><span class="hljl-oB">.</span><span class="hljl-n">λ</span><span class="hljl-p">)</span><span class="hljl-t">
+2-element Array{Array{Float64,1},1}:
+ [0.877443, 0.951687, 0.991444, 1.0, 1.0]          
+ [0.942633, 0.977866, 0.996677, 0.998849, 1.0, 1.0]</span>
 </pre>
-
-<p>Record the version of Julia used for this document</p>
-
-<pre class='hljl'>
-<span class='hljl-nB'>julia&gt; </span><span class='hljl-nf'>versioninfo</span><span class='hljl-p'>()</span><span class='hljl-t'>
+<p>shows that for both <code>st</code> and <code>id</code>, 99% of the variation in these 5- and 6-dimensional random effects is in the first three principal components.</p>
+<h3 id="version-of-julia-and-characteristics-of-the-computer">Version of Julia and characteristics of the computer</h3>
+<pre class="hljl">
+<span class="hljl-nB">julia&gt; </span><span class="hljl-nf">versioninfo</span><span class="hljl-p">()</span><span class="hljl-t">
 Julia Version 1.0.0
 Commit 5d4eaca0c9 (2018-08-08 20:58 UTC)
-DEBUG build
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+  CPU: Intel(R) Core(TM) i5-3570 CPU @ 3.40GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-6.0.0 (ORCJIT, broadwell)</span>
+  LLVM: libLLVM-6.0.0 (ORCJIT, ivybridge)
+
+</span><span class="hljl-nB">julia&gt; </span><span class="hljl-n">BLAS</span><span class="hljl-oB">.</span><span class="hljl-n">_vendor</span><span class="hljl-t">
+:mkl</span>
 </pre>
 
+<HR />
+<div class="footer"><p>
+Published from <a href="MRK_Exp1.jmd">MRK_Exp1.jmd</a> using
+<a href="http://github.com/mpastell/Weave.jl">Weave.jl</a>  on 2018-09-27.
+<p></div>
 
-
-          <HR/>
-          <div class="footer"><p>
-          Published from <a href="MRK_Exp1.jmd">MRK_Exp1.jmd</a> using
-          <a href="http://github.com/mpastell/Weave.jl">Weave.jl</a>
-           on 2018-09-24.
-          <p></div>
-
-
-        </div>
-      </div>
     </div>
-  </BODY>
-</HTML>
+  </div>
+</div>
+</body>
+</html>

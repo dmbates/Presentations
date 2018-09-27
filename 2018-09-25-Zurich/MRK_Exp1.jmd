@@ -1,13 +1,51 @@
-# Analysis of MRK16 data
+---
+title: "Re-analysis of data from Masson, Rabe and Kliegl (2017)"
+author: "Douglas Bates, Maximillian Rabe & Reinhold Kliegl"
+date: "2018-09-28"
+output:
+  html_document:
+    number_sections: true
+    toc: true
+  pdf_document:
+    number_sections: true
+    toc: true
+---
 
-Load packages
-```{julia}
+This is a Julia Markdown (`.jmd`) file that can be executed with the [`Weave` package](https://github.com/mpastell/Weave.jl) for the [`Julia`](https://julialang.org/) programming language.
+
+### Data description and importing the data
+
+The experiment that generated these data is described in Masson, Rabe and Kliegl (2017), *Mem. Cogn.* **45**:480-492 (DOI 10.3758/s13421-016-0666-z).
+The data from Experiment 1 were converted to an [`R`](https://www.r-project.org) data frame and saved in the compressed, serialized file, `MRK_Exp1.rds`, using the `saveRDS` function in `R`.
+
+This compressed serialized format can be loaded into Julia using the [`RData`](https:github.com/JuliaData/RData.jl) package.
+The [`DataFramesMeta`](https://github.com/JuliaStats/DataFramesMeta.jl) package allows for transformations and selections on a data frame, similar to the `dplyr` package for `R`.
+The [`MixedModels`](https://github.com/dmbates/MixedModels.jl) package provides methods of fitting and examining linear and generalized linear mixed-effects models.
+It is similar in scope to the [`lme4`](https://github.com/lme4/lme4) package for `R`.
+
+The `InteractiveUtils` and `LinearAlgebra` packages are standard library packages for Julia.
+The specific uses for these are to access the `versioninfo` function in `InteractiveUtils` and the `svdvals` function in `LinearAlgebra`.
+
+```{julia;term=true}
 using DataFramesMeta, InteractiveUtils, LinearAlgebra, MixedModels, RData
 ```
 
-Load the data from experiment 1 and remove outliers (response time must be between 300 and 3000 ms.)
-Select the columns of interest.
-Convert the two-level factors to the [-1, 1] encoding as that is more stable than [-0.5, 0.5] when forming high-order interactions.
+Load the data from experiment 1 and remove those rows with response time less than 300 ms. or greater than 3000 ms.
+Select the columns of interest, which are
+
+| Factor | Description        |
+|--------|--------------------|
+|   W    | Last trial status  |
+|   L    | Last trial quality |
+|   Q    | Quality            |
+|   F    | Frequency          |
+|   P    | Prime              |
+|   id   | Subject            |
+|   st   | Stimulus           |
+
+The two-level factors in the saved data are coded as ±0.5
+For additional stability when forming high-order interaction terms, convert to a ±1 encoding.
+(If we form interaction terms numerically from ±1 coded factors the results will also be ±1 coded, no matter how high the interaction order is, and the columns of the model matrix will have the same Euclidean length.)  
 
 ```{julia;term=true}
 d2 = @linq load("MRK_Exp1.rds") |>
@@ -16,15 +54,35 @@ d2 = @linq load("MRK_Exp1.rds") |>
            transform(P = 2 .* :P, F = 2 .* :F, Q = 2 .* :Q, L = 2 .* :L, W = 2 .* :W)
 ```
 
-A model with fixed-effects interactions and random-effects interactions with factors and two-factor interactions
+(The name `linq` echoes that of the MicroSoft Visual Studio [`Language Integrated Query`](https://msdn.microsoft.com/en-us/library/bb397926.aspx) library.
+The `@` character indicates this is a call to a macro, not a function in Julia.
+See the documentation of the [`DataFramesMeta`](https://github.com/JuliaStats/DataFramesMeta.jl) package for details.)
+
+### Fit a mixed-effects model
+
+A full factorial model in the experimental factors with random-effects for `id` and `st` and potentially correlated random "slopes" for the experimental factors is defined as
 ```{julia;term=true}
-@time m1 = fit(LinearMixedModel, @formula(rrt ~ 1 + F*P*Q*L*W + (1+P+Q+L+W | st) + (1+F+P+Q+L+W | id)), d2);
-show(m1)
+m1 = LinearMixedModel(@formula(rrt ~ 1 + F*P*Q*L*W + (1+P+Q+L+W | st) + (1+F+P+Q+L+W | id)), d2);
+```
+and fit as
+```{julia;term=true}
+fit!(m1)
 ```
 
-Summary of the optimization process
+(By convention, the names of *mutating* functions in Julia - those that modify one or more or their arguments - end in `!` to warn the programmer that arguments can be modified.)
+
+A summary of the optimization process
 ```{julia;term=true}
 m1.optsum
+```
+shows that the optimization required over 1200 function evaluations on 36 parameters
+```{julia;term=true}
+length(m1.optsum.final)
+```
+
+The time required to fit this model is
+```{julia;term=true}
+@time fit!(m1);
 ```
 
 The estimated covariance matrix factors are
@@ -36,23 +94,28 @@ and
 m1.λ[2]  # for subject (id)
 ```
 
-The squares of the singular values of these matrices are on the scale of variances of principal components
+The singular values of these factors measure the comparative variability in the directions of the principal axes of the covariance structure.
 ```{julia;term=true}
-var1 = abs2.(svdvals(m1.λ[1]));
-show(var1)
-```
-```{julia;term=true}
-var2 = abs2.(svdvals(m1.λ[2]));
-show(var2)
+svdvals.(m1.λ)
 ```
 
-In terms of the cumulative proportion of the variance these are
+By analogy to principal components analysis, a quantity of interest is the cumulative proportion of the variance in the first principal direction, the first two, the first three, etc.
+Defining a function to evaluate this
 ```{julia;term=true}
-show(cumsum(var1) ./ sum(var1))
-show(cumsum(var2) ./ sum(var2))
+function cumulative_variance_proportion(a::AbstractMatrix)
+    cumvar = cumsum(abs2.(svdvals(a)))
+    cumvar ./ cumvar[end]
+end
 ```
+and applying it to these covariance factors
+```{julia;term=true}
+cumulative_variance_proportion.(m1.λ)
+```
+shows that for both `st` and `id`, 99% of the variation in these 5- and 6-dimensional random effects is in the first three principal components.
 
-Record the version of Julia used for this document
+### Version of Julia and characteristics of the computer
+
 ```{julia;term=true}
 versioninfo()
+BLAS._vendor
 ```
