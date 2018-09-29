@@ -48,7 +48,7 @@ class: left, top
 
 - I knew it would be a challenge for me to incorporate code like [`SuiteSparse`](http://faculty.cse.tamu.edu/davis/suitesparse.html) into R and enlisted Martin Maechler's help.
 
-- We started work on the `lme4` package around 2000.  Initially it incorportated both the modeling code and the sparse matrices, etc. Eventually we split off the code for dense and sparse matrices using S4 classes into the `Matrix` package.
+- We started work on the `lme4` package around 2000.  Initially it incorporated both the modeling code and the sparse matrices, etc. Eventually we split off the code for dense and sparse matrices using S4 classes into the `Matrix` package.
 
 - We were still using the formulation of the model from `nlme`, more or less, but there were troublesome examples related to convergence.
 
