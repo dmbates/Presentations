@@ -13,7 +13,7 @@ class: center, middle, inverse, title-slide
 
 # Recent Computational Advances for Mixed-effects Modeling
 ### Douglas Bates
-### 2018-09-25 (updated: 2018-09-25)
+### 2018-09-25 (updated: 2018-09-29)
 
 ---
 
@@ -45,7 +45,7 @@ class: left, top
 
 - I knew it would be a challenge for me to incorporate code like [`SuiteSparse`](http://faculty.cse.tamu.edu/davis/suitesparse.html) into R and enlisted Martin Maechler's help.
 
-- We started work on the `lme4` package around 2000.  Initially it incorportated both the modeling code and the sparse matrices, etc. Eventually we split off the code for dense and sparse matrices using S4 classes into the `Matrix` package.
+- We started work on the `lme4` package around 2000.  Initially it incorporated both the modeling code and the sparse matrices, etc. Eventually we split off the code for dense and sparse matrices using S4 classes into the `Matrix` package.
 
 - We were still using the formulation of the model from `nlme`, more or less, but there were troublesome examples related to convergence.
 
@@ -138,7 +138,7 @@ class: left, top
 
 ```
    user  system elapsed 
-  6.346   0.068   4.680 
+  8.426   0.150   8.617 
 ```
 
 
@@ -302,7 +302,7 @@ class: left, top
 
 ## Two approaches to solving the PLS problem
 
-- In `lme4` we used the CHOLMOD code to solve for `\(\mu_{\mathcal U|\mathcal Y}\)` followed by some CHOLMOD and LAPACK code to solve for `\(\hat{\beta}_\theta\)`, then used these to evaluate the residual and eventually the penalized sum of squared residuals.
+- In `lme4` we used CHOLMOD code to solve for `\(\mu_{\mathcal U|\mathcal Y}\)`, followed by some CHOLMOD and LAPACK code to solve for `\(\hat{\beta}_\theta\)`, then used these solutions to evaluate the residual and eventually the penalized sum of squared residuals.
 
 - It took me a long time to realize that it is not necessary to do evaluate the PLS solution and the residuals, etc. if the lower Cholesky factor of
 
